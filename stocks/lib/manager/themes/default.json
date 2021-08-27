@@ -1,0 +1,36 @@
+{
+    "name": "default",
+    "FontSizeType": {
+        "xs": 10.0,
+        "s": 12.0,
+        "md": 14.0,
+        "xmd": 18.0,
+        "lg": 24.0,
+        "xlg": 36.0
+    },
+    "FontColorType": {
+        "content": "0xFF0F4C75",
+        "title": "0xFF0F4C75",
+        "subTitle": "0xFF769FCD",
+        "bright": "0xFFF7FBFC",
+        "dark": "0xFF1C262C",
+        "gray": "0xFFF7FBFC",
+        "highlight": "0xFFEE4640"
+    },
+    "BGColorType": {
+        "background": "0xFFFFFFFF",
+        "content": "0xFFF7FBFC",
+        "toast": "0xFFBBE1FA",
+        "normalBtn": "0xFFECB390",
+        "bright": "0xFFEE4640",
+        "dark": "0x00FFFFFF",
+        "gray": "0xFFF7FBFC",
+        "highlight": "0xFFEE4640"
+    },
+    "FontFamilyType": {
+        "content": "",
+        "title": "",
+        "subTitle": "",
+        "other": ""
+    }
+}
