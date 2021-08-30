@@ -15,8 +15,13 @@ class _MenuViewState extends State<MenuView> {
     GNTheme theme = GNTheme(context);
     return Container(
         margin: EdgeInsets.only(top: 35, left: 8, right: 8),
-        width: 150,
+        width: 50,
         color: Colors.transparent,
+        child: Column(
+          children: [
+            
+          ],
+        ),
         );
   }
 }
