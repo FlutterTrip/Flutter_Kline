@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:stocks/components/button/button_icon.dart';
-import 'package:stocks/components/button/button_com.dart';
-import 'package:stocks/components/text/text.dart';
 
 class FListView extends StatefulWidget {
   @override

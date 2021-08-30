@@ -6,14 +6,14 @@ class GNTools {
   /// [func]: 要执行的方法
   /// [delay]: 要迟延的时长
   static Function debounce(Function func, [int milliseconds = 2000]) {
-    Timer timer;
+    Timer? timer;
     Duration delay = Duration(milliseconds: milliseconds);
     Function target = () {
-      if (timer?.isActive ?? false) {
-        timer?.cancel();
+      if (timer!.isActive ?? false) {
+        timer!.cancel();
       }
       timer = Timer(delay, () {
-        func?.call();
+        func!.call();
       });
     };
     return target;

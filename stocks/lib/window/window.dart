@@ -7,14 +7,14 @@ import '../nav/nav.dart';
 import '../pages/main_view/main_view.dart';
 
 class Window extends StatefulWidget {
-  Window({Key key}) : super(key: key);
+  Window({Key? key}) : super(key: key);
   @override
   _Window createState() => _Window();
 }
 
 class _Window extends State<Window> {
   final Nav nav = Nav();
-  Widget zeroPage;
+  Widget? zeroPage;
   @override
   void initState() {
     // init managers
@@ -52,7 +52,7 @@ class _Window extends State<Window> {
       child: MaterialApp(
         theme: themeData,
         darkTheme: darkThemeData,
-        title: 'FReader',
+        title: 'Stocks',
         home: Scaffold(
           body: nav,
           backgroundColor: Colors.transparent,

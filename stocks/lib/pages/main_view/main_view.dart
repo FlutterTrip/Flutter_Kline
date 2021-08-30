@@ -12,9 +12,9 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage>
     with TickerProviderStateMixin, GNResponsiveProtocol {
-  Widget _menu;
-  Widget _list;
-  Widget _detail;
+  late Widget _menu;
+  late Widget _list;
+  late Widget _detail;
   GNMainViewStatus _mainViewStatus = GNMainViewStatus.standard;
 
   @override

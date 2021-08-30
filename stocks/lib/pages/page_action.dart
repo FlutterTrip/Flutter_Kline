@@ -3,27 +3,26 @@ import '../tools/GNLog.dart';
 enum PageName { main, menu, list, edit }
 enum FuncName { clickMenu, clickTags, clickNote }
 
-typedef void PageAction(PageName name, FuncName funcName, {List data});
+typedef void PageAction(PageName name, FuncName funcName, {List? data});
 
 /// 用以同级 widget 之间调取方法 ，包含注册方法，调取方法，销毁方法
 class GNPagesAction {
-  static GNPagesAction _m;
-  PageAction action;
-  final Map<PageName, Map<FuncName, Map<String, PageAction>>> actionMap = {};
+  static GNPagesAction? _m;
+  final Map<PageName, Map<FuncName, Map<String, PageAction?>>> actionMap = {};
 
   factory GNPagesAction() {
     if (_m == null) {
       _m = GNPagesAction._internal();
     }
-    return _m;
+    return _m!;
   }
 
   // call func
-  callAction(PageName pageName, FuncName funcName, {List data}) {
+  callAction(PageName pageName, FuncName funcName, {List? data}) {
     if (actionMap[pageName] == null) {
       actionMap[pageName] = {};
     }
-    Map<String, PageAction> funcMap = actionMap[pageName][funcName];
+    Map<String, PageAction?>? funcMap = actionMap[pageName]![funcName];
     if (funcMap != null) {
       funcMap.forEach((key, value) {
         if (value != null) {
@@ -42,11 +41,11 @@ class GNPagesAction {
     if (actionMap[pageName] == null) {
       actionMap[pageName] = {};
     }
-    if (actionMap[pageName][funcName] == null) {
-      actionMap[pageName][funcName] = {};
+    if (actionMap[pageName]![funcName] == null) {
+      actionMap[pageName]![funcName] = {};
     }
-    if (actionMap[pageName][funcName][widget.toString()] == null) {
-      actionMap[pageName][funcName][widget.toString()] = action;
+    if (actionMap[pageName]![funcName]![widget.toString()] == null) {
+      actionMap[pageName]![funcName]![widget.toString()] = action;
     }
   }
 
@@ -56,7 +55,7 @@ class GNPagesAction {
       value.forEach((funcName, value2) {
         value2.forEach((widgetName, action) {
           if (widgetName == widget.toString() && action != null) {
-            actionMap[pageName][funcName][widgetName] = null;
+            actionMap[pageName]![funcName]![widgetName] = null;
           }
         });
       });
