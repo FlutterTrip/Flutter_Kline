@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stocks/components/text/text.dart';
 import 'package:stocks/manager/exchange_manager.dart';
 import 'package:stocks/models/tokenModel.dart';
+import 'package:stocks/models/dataModel.dart';
 import 'package:stocks/net/socket_manager.dart';
 
 class FListView extends StatefulWidget {
@@ -15,17 +16,26 @@ class _FListViewState extends State<FListView> {
   @override
   void initState() {
     RowModel m = RowModel();
-    m.token0 = Token("BNB","BNB");
-    m.token1 = Token("BTC", "BTC");
-    RowModel m2 = RowModel();
-    m2.token0 = Token("BNB", "BNB");
-    m2.token1 = Token("ETH", "ETH");
+    m.token0 = Token("DOGE", "DOGE");
+    m.token1 = Token("USDT", "USDT");
+
     setState(() {
-      datas = [m, m2];
+      datas = [m];
     });
     SocketManager sm = SocketManager.instance();
-    sm.startSocket(ExchangeSymbol.BSC, (message) {
-      print(message);
+    Pair pair = Pair();
+    pair.token0 = Token("DOGE", "DOGE");
+    pair.token1 = Token("USDT", "USDT");
+    sm.subscription(
+        SubscriptionParm(ExchangeSymbol.BSC, SubscriptionType.baseHQ, pair,
+            id: 66), (message) {
+      // print(message);
+      BaseHQData d = message as BaseHQData;
+      setState(() {
+        datas[0].nowPrice = double.parse(d.nowPrice).toStringAsFixed(4);
+        datas[0].maxPrice = double.parse(d.maxPrice).toStringAsFixed(4);
+        datas[0].minPrice = double.parse(d.minPrice).toStringAsFixed(4);
+      });
     });
     super.initState();
   }
@@ -59,12 +69,21 @@ class PairRowView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             GNText("${model.token0.symbol}/${model.token1.symbol}"),
-            GNText("成交量：1000"),
+            GNText("现价${model.nowPrice}"),
+          ],
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GNText("最高价${model.maxPrice}"),
+            GNText("最低价${model.minPrice}"),
           ],
         )
       ],
@@ -74,4 +93,6 @@ class PairRowView extends StatelessWidget {
 
 class RowModel extends Pair {
   String nowPrice = '--';
+  String maxPrice = '--';
+  String minPrice = '--';
 }

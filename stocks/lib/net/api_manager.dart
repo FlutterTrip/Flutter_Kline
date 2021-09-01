@@ -4,11 +4,15 @@ enum apiType { kline, baseUrl }
 
 enum apiReqType { get, post, socket }
 
+const Map BSCAUTH = {
+  "key": "z3unZp6qVrNEsyOxNoAOWgi0TqMmzgvcr72qM2rgklm62nFs8yAo9lCg9LpqXjWU",
+  "secret": "zsqLdu7s0lNiJKh7BNcXo8OEH1SMrC4LpdYCZ0VWUfiQwValTERUy8xfRzuLyWdO"
+};
 class APIManager {
   Map<ExchangeSymbol, Map<apiType, Map<apiReqType, String>>> apiMap = {
     ExchangeSymbol.BSC: {
       apiType.baseUrl: {
-        apiReqType.socket: 'wss://stream.binance.com:9443',
+        apiReqType.socket: 'wss://stream.binance.com:9443/ws',
         apiReqType.get: 'https://api.binance.com'
       },
       apiType.kline: {apiReqType.socket: '', apiReqType.get: '/api/v3/klines'}

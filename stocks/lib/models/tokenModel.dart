@@ -23,4 +23,5 @@ class CurrencyDesc extends TokenDesc {
 class Pair {
   Token token0 = Token('Doge', 'Doge');
   Token token1 = Token('Bnb', 'Bnb');
+  String get symbol => '${this.token0.symbol}${this.token1.symbol}';
 }
