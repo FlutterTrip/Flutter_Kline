@@ -18,24 +18,27 @@ class _FListViewState extends State<FListView> {
     RowModel m = RowModel();
     m.token0 = Token("DOGE", "DOGE");
     m.token1 = Token("USDT", "USDT");
+    RowModel m2 = RowModel();
+    m2.token0 = Token("BNB", "BNB");
+    m2.token1 = Token("USDT", "USDT");
 
     setState(() {
-      datas = [m];
+      datas = [m, m2];
     });
     SocketManager sm = SocketManager.instance();
-    Pair pair = Pair();
-    pair.token0 = Token("DOGE", "DOGE");
-    pair.token1 = Token("USDT", "USDT");
+    // Pair pair = Pair();
+    // pair.token0 = Token("DOGE", "DOGE");
+    // pair.token1 = Token("USDT", "USDT");
     sm.subscription(
-        SubscriptionParm(ExchangeSymbol.BSC, SubscriptionType.baseHQ, pair,
+        SubscriptionParm(ExchangeSymbol.BSC, SubscriptionType.baseHQ, datas,
             id: 66), (message) {
-      // print(message);
+      print(message);
       BaseHQData d = message as BaseHQData;
-      setState(() {
-        datas[0].nowPrice = double.parse(d.nowPrice).toStringAsFixed(4);
-        datas[0].maxPrice = double.parse(d.maxPrice).toStringAsFixed(4);
-        datas[0].minPrice = double.parse(d.minPrice).toStringAsFixed(4);
-      });
+      // setState(() {
+      //   datas[0].nowPrice = double.parse(d.nowPrice).toStringAsFixed(4);
+      //   datas[0].maxPrice = double.parse(d.maxPrice).toStringAsFixed(4);
+      //   datas[0].minPrice = double.parse(d.minPrice).toStringAsFixed(4);
+      // });
     });
     super.initState();
   }

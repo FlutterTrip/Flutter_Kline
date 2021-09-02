@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'package:stocks/manager/exchange_manager.dart';
 import 'package:stocks/models/dataModel.dart';
 import 'socket_manager.dart';
 
 /// 返回的原始数据进行解析，每个交易所都不一样，需要自行去实现不同的适配器
 mixin DataAdapterProtocol {
-  dynamic? parseData(dynamic data) => null;
+  SubscriptionType? filterDataType(dynamic data) => null;
+  // dynamic? parseData(dynamic data) => null;
   BaseHQData parseBaseHQ(dynamic data) => BaseHQData();
   HQData parseHQ(dynamic data) => HQData();
   KLineData parseKline(dynamic data) => KLineData();
@@ -12,15 +14,64 @@ mixin DataAdapterProtocol {
 
 /// 关于 websocket 请求时对于返回的信息区分，定义生成 key，通过返回的信息获取 key，具体实现每个交易所都不一样
 mixin SocketAdapterProtocol {
-  getMessageKey(dynamic data) => "";
-  String generateKey(SubscriptionParm parm) => "";
-  Map generateSendMessage(SubscriptionParm parm) => {};
+  String subscription(SubscriptionParm parm) => "";
+  String unsubscription(SubscriptionParm parm) => "";
 }
 
-class Adapter with DataAdapterProtocol, SocketAdapterProtocol {}
+class Adapter with DataAdapterProtocol, SocketAdapterProtocol {
+  static Adapter? getAdapterWith(ExchangeSymbol symbol) {
+    switch (symbol) {
+      case ExchangeSymbol.BSC:
+        return BscAdapter() as Adapter;
+      default:
+        return null;
+    }
+  }
+}
 
 /// 币安交易所网络请求适配器
 class BscAdapter extends Adapter {
+  @override
+  String subscription(SubscriptionParm parm) {
+    String streamName = getSocketStreamName(parm.type);
+    List<String> streamNameWithParm = [];
+    parm.pairs.forEach((pair) {
+      String symbol = pair.symbol.toLowerCase();
+      streamNameWithParm.add(
+          "$symbol${this.getSocketStreamName(parm.type)}${parm.otherParm}");
+    });
+    return JsonEncoder().convert(
+        {"method": "SUBSCRIBE", "params": streamNameWithParm, "id": parm.id});
+  }
+
+  @override
+  String unsubscription(SubscriptionParm parm) {
+    String streamName = getSocketStreamName(parm.type);
+    List<String> streamNameWithParm = [];
+    parm.pairs.forEach((pair) {
+      String symbol = pair.symbol.toLowerCase();
+      streamNameWithParm.add(
+          "$symbol${this.getSocketStreamName(parm.type)}${parm.otherParm}");
+    });
+    return JsonEncoder().convert(
+        {"method": "UNSUBSCRIBE", "params": streamNameWithParm, "id": parm.id});
+  }
+
+  @override 
+  SubscriptionType? filterDataType(dynamic data){
+    String streamName = _getMessageStreamName(data);
+    switch (streamName) {
+      case "@ticker":
+        return SubscriptionType.HQ;
+      case "@miniTicker":
+        return SubscriptionType.baseHQ;
+      case "@kline":
+        return SubscriptionType.kline;
+      default:
+        return null;
+    }
+  }
+
   String getSocketStreamName(SubscriptionType type) {
     switch (type) {
       case SubscriptionType.HQ:
@@ -34,25 +85,20 @@ class BscAdapter extends Adapter {
     }
   }
 
-  dynamic? parseData(dynamic data) {
-    String streamName = _getMessageStreamName(data);
-    switch (streamName) {
-      case "@ticker":
-        return parseHQ(data);
-      case "@miniTicker":
-        return parseBaseHQ(data);
-      case "@kline":
-        return parseKline(data);
-      default:
-        return null;
-    }
-  }
-
-  @override
-  String generateKey(SubscriptionParm parm) {
-    String symbol = parm.pair.symbol.toLowerCase();
-    return "$symbol${this.getSocketStreamName(parm.type)}${parm.otherParm}";
-  }
+  // @override
+  // dynamic? parseData(dynamic data) {
+  //   String streamName = _getMessageStreamName(data);
+  //   switch (streamName) {
+  //     case "@ticker":
+  //       return parseHQ(data);
+  //     case "@miniTicker":
+  //       return parseBaseHQ(data);
+  //     case "@kline":
+  //       return parseKline(data);
+  //     default:
+  //       return null;
+  //   }
+  // }
 
   String _getMessageStreamName(dynamic data) {
     Map obj = JsonDecoder().convert(data);
@@ -69,19 +115,6 @@ class BscAdapter extends Adapter {
         break;
     }
     return streamName;
-  }
-
-  @override
-  getMessageKey(dynamic data) {
-    Map obj = JsonDecoder().convert(data);
-    String symbol = obj["s"] ?? "";
-    symbol = symbol.toLowerCase();
-    String streamName = _getMessageStreamName(data);
-    String otherParm = "";
-    if (streamName == '@kline') {
-      otherParm = "_${obj['k']!['i']!}";
-    }
-    return "$symbol$streamName$otherParm";
   }
 
   @override
@@ -110,17 +143,5 @@ class BscAdapter extends Adapter {
   parseKline(dynamic data) {
     // TODO: implement parseKline
     throw UnimplementedError();
-  }
-
-  @override
-  Map generateSendMessage(SubscriptionParm parm) {
-    Map r = {
-      "method": parm.action == SubscriptionAction.subscription
-          ? "SUBSCRIBE"
-          : "UNSUBSCRIBE",
-      "params": [this.generateKey(parm)],
-      "id": parm.id
-    };
-    return r;
   }
 }

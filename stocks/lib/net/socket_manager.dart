@@ -35,26 +35,39 @@ class SubscriptionParm {
   ExchangeSymbol symbol;
   SubscriptionAction? action;
   SubscriptionType type = SubscriptionType.baseHQ;
-  Pair pair = Pair();
+  List<Pair> pairs = [Pair()];
   String? otherParm;
-  SubscriptionParm(this.symbol, this.type, this.pair, {this.action = SubscriptionAction.subscription, this.otherParm = "", this.id = 1});
+  SubscriptionParm(this.symbol, this.type, this.pairs, {this.action = SubscriptionAction.subscription, this.otherParm = "", this.id = 1});
 }
 
 class _SocketInfo {
   late _Socket socket;
   ExchangeSymbol? symbol;
   Adapter? adapter;
-  Map<String, List<void Function(dynamic)>> subscriptionerFunc = {};
-  Map<String, List<void Function(dynamic)>> onErrorFunc = {};
-  Map<String, List<void Function()>> onSuccFunc = {};
+  Map<SubscriptionType, List<void Function(dynamic)>> subscriptionerFunc = {};
+  Map<SubscriptionType, List<void Function(dynamic)>> onErrorFunc = {};
+  Map<SubscriptionType, List<void Function()>> onSuccFunc = {};
   onData(dynamic message) {
     assert(adapter != null);
-    String key = adapter!.getMessageKey(message);
-    if (this.subscriptionerFunc.keys.length > 0) {
+    SubscriptionType? key = adapter!.filterDataType(message);
+    if (this.subscriptionerFunc.keys.length > 0 && key != null) {
       List<void Function(dynamic)>? funcs = this.subscriptionerFunc[key];
       if (funcs != null && funcs.length > 0) {
         funcs.forEach((element) {
-          element(adapter!.parseData(message));
+            switch (key) {
+            case SubscriptionType.HQ:
+              element(adapter!.parseHQ(message));
+              break;
+            case SubscriptionType.baseHQ:
+              element(adapter!.parseBaseHQ(message));
+              break;
+            case SubscriptionType.kline:
+              element(adapter!.parseKline(message));
+              break;
+            default:
+              element(message);
+              break;
+          }
         });
       }
       // for (var item in this.subscriptionerFunc) {}
@@ -76,31 +89,21 @@ class SocketManager {
     return _instance;
   }
 
-  Adapter? _getAdapter(ExchangeSymbol symbol) {
-    switch (symbol) {
-      case ExchangeSymbol.BSC:
-        return BscAdapter() as Adapter;
-      default:
-        return null;
-    }
-  }
-
   subscription(SubscriptionParm parm, void Function(dynamic) onData,
       [void Function()? onSucc, void Function(dynamic error)? onError]) {
-    Adapter? a = this._getAdapter(parm.symbol);
+    Adapter? a = Adapter.getAdapterWith(parm.symbol);
     assert(a != null);
     this._startSocket(
-        parm.symbol, a!.generateKey(parm), onData, onSucc, onError);
+        parm.symbol, parm.type, onData, onSucc, onError);
 
-    this._sendMessage(parm.symbol, a.generateSendMessage(parm));
+    this._sendMessage(parm.symbol, a!.subscription(parm));
   }
 
   unsubscription(SubscriptionParm parm,
       [void Function()? onSucc, void Function(dynamic error)? onError]) {
-    Adapter? a = this._getAdapter(parm.symbol);
+    Adapter? a = Adapter.getAdapterWith(parm.symbol);
     assert(a != null);
-
-    this._sendMessage(parm.symbol, a!.generateSendMessage(parm));
+    this._sendMessage(parm.symbol, a!.unsubscription(parm));
   }
 
   _SocketInfo initSocket(ExchangeSymbol symbol) {
@@ -108,11 +111,11 @@ class SocketManager {
     _SocketInfo r = _SocketInfo();
     r.socket = _Socket(url);
     r.symbol = symbol;
-    r.adapter = this._getAdapter(symbol);
+    r.adapter = Adapter.getAdapterWith(symbol);
     return r;
   }
 
-  _startSocket(ExchangeSymbol symbol, String key,
+  _startSocket(ExchangeSymbol symbol, SubscriptionType key,
       [void Function(dynamic)? onData,
       void Function()? onSucc,
       void Function(dynamic error)? onError]) {
@@ -170,7 +173,6 @@ class _Socket {
 
   start(void Function(dynamic) onData, void Function(dynamic)? onError) {
     this.channel.stream.listen((message) {
-      print(message);
       onData(message);
     }, onError: (error) {
       if (onError != null) {
@@ -183,9 +185,7 @@ class _Socket {
   }
 
   send(dynamic message) {
-    String m = JsonEncoder().convert(message);
-    print(m);
-    channel.sink.add(m);
+    channel.sink.add(message);
   }
 
   close() {
