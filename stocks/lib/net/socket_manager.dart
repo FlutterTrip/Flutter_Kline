@@ -35,6 +35,9 @@ class SubscriptionParm {
   ExchangeSymbol symbol;
   SubscriptionAction? action;
   SubscriptionType type = SubscriptionType.baseHQ;
+  void Function(dynamic)? subscriptionerFunc;
+  void Function(dynamic)? onErrorFunc;
+  void Function()? onSuccFunc;
   List<Pair> pairs = [Pair()];
   String? otherParm;
   SubscriptionParm(this.symbol, this.type, this.pairs, {this.action = SubscriptionAction.subscription, this.otherParm = "", this.id = 1});
@@ -44,16 +47,15 @@ class _SocketInfo {
   late _Socket socket;
   ExchangeSymbol? symbol;
   Adapter? adapter;
-  Map<SubscriptionType, List<void Function(dynamic)>> subscriptionerFunc = {};
-  Map<SubscriptionType, List<void Function(dynamic)>> onErrorFunc = {};
-  Map<SubscriptionType, List<void Function()>> onSuccFunc = {};
+  Map<SubscriptionType, List<SubscriptionParm>> subscriptionerParm = {};
   onData(dynamic message) {
     assert(adapter != null);
     SubscriptionType? key = adapter!.filterDataType(message);
-    if (this.subscriptionerFunc.keys.length > 0 && key != null) {
-      List<void Function(dynamic)>? funcs = this.subscriptionerFunc[key];
+    if (this.subscriptionerParm.keys.length > 0 && key != null) {
+      List<SubscriptionParm>? funcs = this.subscriptionerParm[key];
       if (funcs != null && funcs.length > 0) {
-        funcs.forEach((element) {
+        funcs.forEach((parm) {
+            void Function(dynamic) element = parm.subscriptionerFunc!;
             switch (key) {
             case SubscriptionType.HQ:
               element(adapter!.parseHQ(message));
@@ -70,7 +72,6 @@ class _SocketInfo {
           }
         });
       }
-      // for (var item in this.subscriptionerFunc) {}
     }
   }
 }
@@ -93,8 +94,10 @@ class SocketManager {
       [void Function()? onSucc, void Function(dynamic error)? onError]) {
     Adapter? a = Adapter.getAdapterWith(parm.symbol);
     assert(a != null);
-    this._startSocket(
-        parm.symbol, parm.type, onData, onSucc, onError);
+    parm.subscriptionerFunc = onData;
+    parm.onErrorFunc = onError;
+    parm.onSuccFunc = onSucc;
+    this._startSocket(parm);
 
     this._sendMessage(parm.symbol, a!.subscription(parm));
   }
@@ -115,40 +118,20 @@ class SocketManager {
     return r;
   }
 
-  _startSocket(ExchangeSymbol symbol, SubscriptionType key,
-      [void Function(dynamic)? onData,
-      void Function()? onSucc,
-      void Function(dynamic error)? onError]) {
+  _startSocket(SubscriptionParm parm) {
+    ExchangeSymbol symbol = parm.symbol;
     _SocketInfo? s = socketMap[symbol];
     if (s == null) {
       s = initSocket(symbol);
       socketMap[symbol] = s;
+      s.socket.start(s.onData, parm.onErrorFunc);
     }
-    s.socket.start(s.onData, onError);
-    if (onData != null) {
-      List<void Function(dynamic)>? funcs = s.subscriptionerFunc[key];
-      if (funcs == null) {
-        funcs = [];
-      }
-      funcs.add(onData);
-      s.subscriptionerFunc[key] = funcs;
+    List<SubscriptionParm>? parms = s.subscriptionerParm[parm.type];
+    if (parms == null) {
+      parms = [];
     }
-    if (onError != null) {
-      List<void Function(dynamic)>? funcs = s.onErrorFunc[key];
-      if (funcs == null) {
-        funcs = [];
-      }
-      funcs.add(onError);
-      s.onErrorFunc[key] = funcs;
-    }
-    if (onSucc != null) {
-      List<void Function()>? funcs = s.onSuccFunc[key];
-      if (funcs == null) {
-        funcs = [];
-      }
-      funcs.add(onSucc);
-      s.onSuccFunc[key] = funcs;
-    }
+    parms.add(parm);
+    s.subscriptionerParm[parm.type] = parms;
   }
 
   _sendMessage(ExchangeSymbol symbol, dynamic message) {
@@ -166,29 +149,33 @@ class SocketManager {
 }
 
 class _Socket {
-  late IOWebSocketChannel channel;
+  IOWebSocketChannel? channel;
   _Socket(String url) {
     this.channel = IOWebSocketChannel.connect(url);
   }
 
   start(void Function(dynamic) onData, void Function(dynamic)? onError) {
-    this.channel.stream.listen((message) {
-      onData(message);
-    }, onError: (error) {
-      if (onError != null) {
-        onError(error);
-      }
-      print(error);
-    }, onDone: () {
-      print('onDone');
-    });
+    if (this.channel != null) {
+      // if (this.channel.stream. != status.abnormalClosure)
+      this.channel!.stream.listen((message) {
+        onData(message);
+      }, onError: (error) {
+        if (onError != null) {
+          onError(error);
+        }
+        print(error);
+      }, onDone: () {
+        print('onDone');
+      });
+    } 
+    
   }
 
   send(dynamic message) {
-    channel.sink.add(message);
+    channel!.sink.add(message);
   }
 
   close() {
-    channel.sink.close(status.goingAway);
+    channel!.sink.close(status.goingAway);
   }
 }

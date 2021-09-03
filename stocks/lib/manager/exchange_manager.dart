@@ -21,11 +21,11 @@ class ExchangeModel {
 }
 
 class ExchangeManager {
-  static List<ExchangeModel> exchanges = [
-    ExchangeModel(ExchangeSymbol.BSC, '币安', false, '币安---',
+  static Map<ExchangeSymbol,ExchangeModel> exchanges = {
+    ExchangeSymbol.BSC: ExchangeModel(ExchangeSymbol.BSC, '币安', false, '币安---',
         'https://www.binance.com/', '', 0,
         currency: Currency('Bnb', 'Bnb'))
-  ];
+  };
 
   List<ExchangeSymbol> nowSelecteds = [ExchangeSymbol.BSC];
 
@@ -39,4 +39,10 @@ class ExchangeManager {
     }
     return _instance;
   }
+
+  static ExchangeModel? getExchangeModel(ExchangeSymbol symbol) {
+    return ExchangeManager.exchanges[symbol];
+  }
+
+
 }

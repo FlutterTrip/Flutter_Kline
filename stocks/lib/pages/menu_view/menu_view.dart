@@ -19,7 +19,7 @@ class _MenuViewState extends State<MenuView> {
         color: Colors.transparent,
         child: Column(
           children: [
-            
+            IconButton(onPressed: (){}, icon: Icon(Icons.list), color: GNTheme().fontColorType(FontColorType.bright),)
           ],
         ),
         );

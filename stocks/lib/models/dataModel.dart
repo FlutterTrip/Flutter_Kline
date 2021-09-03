@@ -1,3 +1,5 @@
+import 'package:stocks/manager/exchange_manager.dart';
+
 import 'tokenModel.dart';
 
 // {
@@ -38,6 +40,7 @@ import 'tokenModel.dart';
 //   }
 class BaseHQData {
   int time = 0;
+  ExchangeSymbol exchangeSymbol = ExchangeSymbol.BSC;
   String symbol = "";
   String nowPrice = "";
   String zdf = "";
@@ -49,12 +52,13 @@ class BaseHQData {
   String getZDF() {
     double np = double.parse(nowPrice);
     double kpjTemp = double.parse(kpj);
-    return "${(np - kpjTemp) / kpjTemp / 100}%";
+    double zdf = ((np - kpjTemp) / kpjTemp) * 100;
+    return "${zdf.toStringAsFixed(2)}%";
   }
 
   @override
   String toString() {
-    return "symbol:$symbol | nowPrice:$nowPrice | maxPrice:$maxPrice | minPrice:$minPrice";
+    return "symbol:$symbol | nowPrice:$nowPrice | kpj:$kpj";
   }
 }
 

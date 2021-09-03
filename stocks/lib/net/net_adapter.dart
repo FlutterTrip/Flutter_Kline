@@ -122,7 +122,7 @@ class BscAdapter extends Adapter {
     Map obj = JsonDecoder().convert(data);
     BaseHQData r = BaseHQData();
     r.time = obj["E"];
-    r.symbol = obj["s"];
+    r.symbol = obj["s"].toString().toLowerCase();
     r.nowPrice = obj["c"];
     r.kpj = obj["o"];
     r.maxPrice = obj["h"];
@@ -130,6 +130,7 @@ class BscAdapter extends Adapter {
     r.cjl = obj["v"];
     r.cje = obj["q"];
     r.zdf = r.getZDF();
+    r.exchangeSymbol = ExchangeSymbol.BSC;
     return r;
   }
 
