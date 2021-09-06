@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stocks/pages/menu_view/menu_view.dart';
 import 'package:stocks/pages/list_view/list_view.dart';
+import 'package:stocks/manager/symbols_manager.dart';
 import '../../manager/responsive.dart';
 import '../../manager/method_channel_manger.dart';
 import '../../nav/nav.dart';
@@ -26,6 +27,7 @@ class _MainPageState extends State<MainPage>
       color: Colors.blue,
     );
     loadData();
+    SymbolsManager.instance();
     super.initState();
   }
 
@@ -66,11 +68,10 @@ class _MainPageState extends State<MainPage>
       bool isShowDetail = true;
       switch (s) {
         case GNMainViewSize.middle:
-          isShowMenu = false;
-          break;
         case GNMainViewSize.small:
-          isShowMenu = false;
-          isShowDetail = false;
+          isShowMenu = true;
+          isShowDetail = true;
+          isShowList = true;
           break;
         case GNMainViewSize.big:
         default:
@@ -84,23 +85,23 @@ class _MainPageState extends State<MainPage>
         isShowList = false;
       }
       return Flex(direction: Axis.horizontal, children: [
-        Offstage(
-          offstage: !isShowMenu,
+        Visibility(
+          visible: isShowMenu,
           child: _menu,
         ),
-        s == GNMainViewSize.small ? Expanded(child: Offstage(
-          offstage: !isShowList,
+        s == GNMainViewSize.small ? Expanded(child: Visibility(
+          visible: isShowList,
           child: _list,
-        )): Offstage(
-          offstage: !isShowList,
+        )): Visibility(
+          visible: isShowList,
           child: _list,
         ),
-        s == GNMainViewSize.small ? Offstage(
-          offstage: !isShowDetail,
+        s == GNMainViewSize.small ? Visibility(
+          visible: isShowDetail,
           child: _detail,
         ) :
-        Expanded(child: Offstage(
-          offstage: !isShowDetail,
+        Expanded(child: Visibility(
+          visible: isShowDetail,
           child: _detail,
         ),)
       ]);

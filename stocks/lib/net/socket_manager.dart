@@ -20,10 +20,8 @@ class ProxyHttpOverrides extends HttpOverrides {
     });
   }
 }
-enum SubscriptionAction {
-  subscription,
-  unsubscription
-}
+
+enum SubscriptionAction { subscription, unsubscription }
 enum SubscriptionType {
   kline,
   baseHQ,
@@ -32,6 +30,7 @@ enum SubscriptionType {
 
 class SubscriptionParm {
   int? id;
+  String name = "";
   ExchangeSymbol symbol;
   SubscriptionAction? action;
   SubscriptionType type = SubscriptionType.baseHQ;
@@ -40,7 +39,10 @@ class SubscriptionParm {
   void Function()? onSuccFunc;
   List<Pair> pairs = [Pair()];
   String? otherParm;
-  SubscriptionParm(this.symbol, this.type, this.pairs, {this.action = SubscriptionAction.subscription, this.otherParm = "", this.id = 1});
+  SubscriptionParm(this.symbol, this.type, this.pairs, this.name,
+      {this.action = SubscriptionAction.subscription,
+      this.otherParm = "",
+      this.id = 1});
 }
 
 class _SocketInfo {
@@ -55,8 +57,8 @@ class _SocketInfo {
       List<SubscriptionParm>? funcs = this.subscriptionerParm[key];
       if (funcs != null && funcs.length > 0) {
         funcs.forEach((parm) {
-            void Function(dynamic) element = parm.subscriptionerFunc!;
-            switch (key) {
+          void Function(dynamic) element = parm.subscriptionerFunc!;
+          switch (key) {
             case SubscriptionType.HQ:
               element(adapter!.parseHQ(message));
               break;
@@ -82,12 +84,12 @@ class SocketManager {
 
   SocketManager._();
 
-  static instance() {
+  static SocketManager instance() {
     if (_instance == null) {
       _instance = SocketManager._();
       HttpOverrides.global = ProxyHttpOverrides();
     }
-    return _instance;
+    return _instance!;
   }
 
   subscription(SubscriptionParm parm, void Function(dynamic) onData,
@@ -107,10 +109,34 @@ class SocketManager {
     Adapter? a = Adapter.getAdapterWith(parm.symbol);
     assert(a != null);
     this._sendMessage(parm.symbol, a!.unsubscription(parm));
+    socketMap.forEach((key, value) {
+      if (parm.symbol == key && value != null) {
+        value.subscriptionerParm.forEach((key2, value2) {
+          if (key2 == parm.type) {
+            List<SubscriptionParm> delObj = [];
+            for (var i = 0; i < value2.length; i++) {
+              SubscriptionParm element = value2[i];
+              if (element.name == parm.name) {
+                delObj.add(element);
+              }
+            }
+            if (delObj.length > 0) {
+              delObj.forEach((obj) {
+                value2.remove(obj);
+              });
+            }
+            // if (value2.length == 0) {
+            //   value.socket.close();
+            // }
+          }
+        });
+      }
+    });
   }
 
   _SocketInfo initSocket(ExchangeSymbol symbol) {
-    String url = APIManager.instance().getSocketAPI(symbol);
+    String url =
+        APIManager.getApi(symbol, apiType.baseUrl, reqType: apiReqType.socket)!;
     _SocketInfo r = _SocketInfo();
     r.socket = _Socket(url);
     r.symbol = symbol;
@@ -124,11 +150,27 @@ class SocketManager {
     if (s == null) {
       s = initSocket(symbol);
       socketMap[symbol] = s;
+    }
+    if (s.socket.channel?.innerWebSocket == null) {
       s.socket.start(s.onData, parm.onErrorFunc);
     }
+
     List<SubscriptionParm>? parms = s.subscriptionerParm[parm.type];
     if (parms == null) {
       parms = [];
+    }
+    // 做一次清理，删除重复的
+    List<SubscriptionParm> delObj = [];
+    for (var i = 0; i < parms.length; i++) {
+      SubscriptionParm element = parms[i];
+      if (element.name == parm.name) {
+        delObj.add(element);
+      }
+    }
+    if (parms.length > 0 && delObj.length > 0) {
+      delObj.forEach((element) {
+        parms!.remove(element);
+      });
     }
     parms.add(parm);
     s.subscriptionerParm[parm.type] = parms;
@@ -167,11 +209,11 @@ class _Socket {
       }, onDone: () {
         print('onDone');
       });
-    } 
-    
+    }
   }
 
   send(dynamic message) {
+    print("socket send: $message");
     channel!.sink.add(message);
   }
 

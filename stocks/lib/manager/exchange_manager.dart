@@ -33,11 +33,11 @@ class ExchangeManager {
 
   ExchangeManager._();
 
-  static instance() {
+  static ExchangeManager instance() {
     if (_instance == null) {
       _instance = ExchangeManager._();
     }
-    return _instance;
+    return _instance!;
   }
 
   static ExchangeModel? getExchangeModel(ExchangeSymbol symbol) {

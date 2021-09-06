@@ -24,6 +24,7 @@ dependencies:
   flutter:
     sdk: flutter
   provider:
+  dio:
   web_socket_channel:
   flutter_staggered_grid_view:
   flutter_localizations:

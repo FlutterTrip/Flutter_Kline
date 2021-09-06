@@ -1,6 +1,6 @@
 import 'package:stocks/manager/exchange_manager.dart';
 
-enum apiType { kline, baseUrl }
+enum apiType { kline, baseUrl, symbols }
 
 enum apiReqType { get, post, socket }
 
@@ -15,7 +15,8 @@ class APIManager {
         apiReqType.socket: 'wss://stream.binance.com:9443/ws',
         apiReqType.get: 'https://api.binance.com'
       },
-      apiType.kline: {apiReqType.socket: '', apiReqType.get: '/api/v3/klines'}
+      apiType.kline: {apiReqType.socket: '', apiReqType.get: '/api/v3/klines'},
+      apiType.symbols: {apiReqType.get: '/api/v3/exchangeInfo'}
     }
   };
 
@@ -23,28 +24,14 @@ class APIManager {
 
   APIManager._();
 
-  static instance() {
+  static APIManager instance() {
     if (_instance == null) {
       _instance = APIManager._();
     }
-    return _instance;
+    return _instance!;
   }
 
-  String getSocketAPI(ExchangeSymbol symbol) {
-    return this.apiMap[symbol]![apiType.baseUrl]![apiReqType.socket]!;
-  }
-
-  String getKlineSocketAPI(ExchangeSymbol symbol) {
-    return this.getSocketAPI(symbol);
-  }
-
-  String getKlineGetAPI(ExchangeSymbol symbol) {
-    String api = this.apiMap[symbol]![apiType.kline]![apiReqType.get]!;
-    String base = this.apiMap[symbol]![apiType.baseUrl]![apiReqType.get]!;
-    return "$base$api";
-  }
-
-  String getHqSocketApi(ExchangeSymbol symbol) {
-    return this.getSocketAPI(symbol);
+  static String? getApi(ExchangeSymbol symbol, apiType type, {apiReqType? reqType = apiReqType.get}) {
+    return APIManager.instance().apiMap[symbol]?[type]?[reqType];
   }
 }
