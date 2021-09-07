@@ -3,11 +3,12 @@ import 'package:stocks/manager/exchange_manager.dart';
 import 'package:stocks/models/tokenModel.dart';
 import 'package:stocks/net/api_manager.dart';
 import 'package:stocks/net/http.dart';
+import 'package:stocks/tools/tools.dart';
 
 class SymbolsManager {
   Map<String, Pair> pairsMap = {};
   Map<String, List<String>> searchTemp = {};
-
+  Function? debounceSearch;
   static SymbolsManager? _instance;
 
   static SymbolsManager instance() {
@@ -22,8 +23,11 @@ class SymbolsManager {
 
   SymbolsManager._();
 
-  static search(String str) {
-    return SymbolsManager.instance()._search(str);
+  static search(String str, Function(List<Pair>) result) {
+    GNTools.debounce(() {
+      SymbolsManager m = SymbolsManager.instance();
+      result(m._search(str));
+    }, 500)();
   }
 
   List<Pair> _search(String str) {
@@ -34,9 +38,11 @@ class SymbolsManager {
     // 查看缓存里有没有之前的搜索记录
     List<String>? tempStrs = searchTemp[searchStr];
     List<String> nextKeys = [];
-    if (tempStrs != null) { // 有记录直接先记下缓存的 keys
+    if (tempStrs != null) {
+      // 有记录直接先记下缓存的 keys
       nextKeys = tempStrs;
-    } else  { // 没有记录再去查单独的字母
+    } else {
+      // 没有记录再去查单独的字母
       if (searchStr.length > 1) {
         tempStrs = searchTemp[searchStr[0]];
         if (tempStrs != null) {
@@ -49,10 +55,11 @@ class SymbolsManager {
       }
     }
     List<Pair> r = [];
-    if (nextKeys.length > 0) { // 根据之前缓存的结果 keys 返回数据模型列表
-      
+    if (nextKeys.length > 0) {
+      // 根据之前缓存的结果 keys 返回数据模型列表
+
       nextKeys.forEach((element) {
-          r.add(pairsMap[element]!);
+        r.add(pairsMap[element]!);
       });
       return r;
     }
@@ -65,7 +72,8 @@ class SymbolsManager {
         r.add(value);
       }
     });
-    if (searchTemp.length >= 20) { // 缓存最多保存 20 个，超过就要删除最小的那个
+    if (searchTemp.length >= 20) {
+      // 缓存最多保存 20 个，超过就要删除最小的那个
       String minListKey = "";
       int num = pairsMap.length;
       searchTemp.forEach((key, value) {

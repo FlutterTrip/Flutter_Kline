@@ -6,6 +6,7 @@ import 'package:stocks/manager/theme_manager.dart';
 import 'package:stocks/models/tokenModel.dart';
 import 'package:stocks/models/dataModel.dart';
 import 'package:stocks/net/socket_manager.dart';
+import 'package:stocks/components/search/search.dart';
 
 class FListView extends StatefulWidget {
   @override
@@ -104,7 +105,9 @@ class _FListViewState extends State<FListView> {
                   icon: Icon(Icons.search),
                   color: GNTheme().fontColorType(FontColorType.bright),
                   iconSize: GNTheme().fontSizeType(FontSizeType.lg),
-                  onPressed: () {},
+                  onPressed: () {
+                    GKSearch().show();
+                  },
                 ))
           ],
         ));

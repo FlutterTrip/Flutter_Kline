@@ -1,19 +1,18 @@
 import 'dart:async';
-
 class GNTools {
   /// 函数防抖
   ///
   /// [func]: 要执行的方法
   /// [delay]: 要迟延的时长
-  static Function debounce(Function func, [int milliseconds = 2000]) {
+  static Function debounce( Function func, [int milliseconds = 2000]) {
     Timer? timer;
     Duration delay = Duration(milliseconds: milliseconds);
     Function target = () {
-      if (timer!.isActive ?? false) {
-        timer!.cancel();
+      if (timer != null && timer!.isActive) {
+        timer?.cancel();
       }
       timer = Timer(delay, () {
-        func!.call();
+        func.call();
       });
     };
     return target;
