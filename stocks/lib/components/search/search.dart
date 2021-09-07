@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stocks/components/space/space.dart';
 import 'package:stocks/models/tokenModel.dart';
 import 'package:stocks/nav/nav.dart';
 import 'package:stocks/components/text/text.dart';
@@ -7,20 +8,27 @@ import 'package:stocks/manager/symbols_manager.dart';
 import 'package:stocks/manager/localizations_manager.dart';
 
 class GKSearchView extends StatefulWidget {
-  const GKSearchView({Key? key}) : super(key: key);
-
+  void Function(Pair)? onSelected;
+  GKSearchView(this.onSelected);
   @override
-  _GKSearchViewState createState() => _GKSearchViewState();
+  _GKSearchViewState createState() => _GKSearchViewState(this.onSelected);
 }
 
 class _GKSearchViewState extends State<GKSearchView> {
   List<Pair> result = [];
   String searchStr = "";
+  void Function(Pair)? _onSelected;
+  _GKSearchViewState(this._onSelected);
   List<Widget> getRow() {
     List<Widget> r = [];
     result.forEach((element) {
-      r.add(Container(
-        height: 30,
+      r.add(MaterialButton(
+        onPressed: (){
+          this._onSelected!(element);
+        },
+        hoverColor: GNTheme().bGColorType(BGColorType.highlight),
+        // height: 30,
+        padding: EdgeInsets.all(16),
         child: Row(
           children: [
             Column(
@@ -37,8 +45,7 @@ class _GKSearchViewState extends State<GKSearchView> {
               ],
             )
           ],
-        ),
-      ));
+        ),));
     });
     return r;
   }
@@ -114,6 +121,7 @@ class _GKSearchViewState extends State<GKSearchView> {
                   filled: true,
                   hintText: GNLocalizations.str("Input here")),
             )),
+            GNSpace(),
         Expanded(
             child: SingleChildScrollView(
           child: Column(
@@ -126,10 +134,10 @@ class _GKSearchViewState extends State<GKSearchView> {
 }
 
 class GKSearch {
-  Function(GKSearch)? onPressedOK;
+  void Function(Pair)? onSelected;
   Function(GKSearch)? onPressedCancel;
   GKSearch({
-    this.onPressedOK,
+    this.onSelected,
     this.onPressedCancel,
   });
   close() {
@@ -150,7 +158,7 @@ class GKSearch {
             fontSize: theme.fontSizeType(FontSizeType.lg),
             color: theme.fontColorType(FontColorType.bright),
           ),
-          content: GKSearchView(),
+          content: GKSearchView(this.onSelected),
           actions: <Widget>[
             TextButton(
                 child: GNText(
@@ -160,7 +168,6 @@ class GKSearch {
                 ),
                 onPressed: () {
                   close();
-                  if (this.onPressedOK != null) this.onPressedOK!(this);
                 }),
           ],
         );

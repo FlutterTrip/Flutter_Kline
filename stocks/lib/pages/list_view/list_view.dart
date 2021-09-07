@@ -18,7 +18,7 @@ class _FListViewState extends State<FListView> {
   String name = "";
   @override
   void initState() {
-    print("initState");
+    // print("initState");
     RowModel m = RowModel();
     m.token0 = Token("DOGE", "DOGE");
     m.token1 = Token("USDT", "USDT");
@@ -28,21 +28,27 @@ class _FListViewState extends State<FListView> {
 
     setState(() {
       datas = [m, m2];
+      _subscriptionData();
     });
-    SocketManager sm = SocketManager.instance();
-    // sm.subscription(
-    //     SubscriptionParm(ExchangeSymbol.BSC, SubscriptionType.baseHQ, datas, "FListView",
-    //         id: 66), (message) {
-    //   BaseHQData d = message as BaseHQData;
-    //   setState(() {
-    //     datas.forEach((element) {
-    //       if (element.symbol == d.symbol) {
-    //         element.updateData(d);
-    //       }
-    //     });
-    //   });
-    // });
+
     super.initState();
+  }
+
+  _subscriptionData() {
+    SocketManager sm = SocketManager.instance();
+    sm.subscription(
+        SubscriptionParm(
+            ExchangeSymbol.BSC, SubscriptionType.baseHQ, datas, "FListView",
+            id: 66), (message) {
+      BaseHQData d = message as BaseHQData;
+      setState(() {
+        datas.forEach((element) {
+          if (element.symbol == d.symbol) {
+            element.updateData(d);
+          }
+        });
+      });
+    });
   }
 
   List<PairRowView> getPairRowViews() {
@@ -106,7 +112,12 @@ class _FListViewState extends State<FListView> {
                   color: GNTheme().fontColorType(FontColorType.bright),
                   iconSize: GNTheme().fontSizeType(FontSizeType.lg),
                   onPressed: () {
-                    GKSearch().show();
+                    GKSearch(onSelected: (Pair onSel) {
+                      setState(() {
+                        this.datas.add(RowModel(onSel));
+                        _subscriptionData();
+                      });
+                    }).show();
                   },
                 ))
           ],
@@ -144,6 +155,14 @@ class PairRowView extends StatelessWidget {
 }
 
 class RowModel extends Pair {
+  RowModel([Pair? pair]) {
+    if (pair != null) {
+      this.token0 = pair.token0;
+      this.token1 = pair.token1;
+      this.exchangeSymbol = pair.exchangeSymbol;
+    }
+  }
+
   List<BaseHQData> hqDatas = [];
   updateData(BaseHQData data) {
     bool isNewExchangeData = true;
