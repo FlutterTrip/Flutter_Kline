@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../tools/GNLog.dart';
-enum PageName { main, menu, list, edit }
-enum FuncName { clickMenu, clickTags, clickNote }
+enum PageName { main, menu, list, detail }
+enum FuncName { clickMenu, clickStock }
 
 typedef void PageAction(PageName name, FuncName funcName, {List? data});
 

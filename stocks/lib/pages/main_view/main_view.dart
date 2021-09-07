@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stocks/pages/menu_view/menu_view.dart';
 import 'package:stocks/pages/list_view/list_view.dart';
 import 'package:stocks/manager/symbols_manager.dart';
+import 'package:stocks/pages/detail_view/detail_view.dart';
 import '../../manager/responsive.dart';
 import '../../manager/method_channel_manger.dart';
 import '../../nav/nav.dart';
@@ -23,9 +24,7 @@ class _MainPageState extends State<MainPage>
     GNResponsive.registerDelegate(this);
     _list = FListView();
     _menu = MenuView();
-    _detail = Container(
-      color: Colors.blue,
-    );
+    _detail = DetailView();
     loadData();
     SymbolsManager.instance();
     super.initState();
@@ -62,49 +61,56 @@ class _MainPageState extends State<MainPage>
 
   @override
   Widget build(BuildContext context) {
-    return GNResponsive.getResponsive((GNMainViewSize s) {
-      bool isShowMenu = true;
-      bool isShowList = true;
-      bool isShowDetail = true;
-      switch (s) {
-        case GNMainViewSize.middle:
-        case GNMainViewSize.small:
-          isShowMenu = true;
-          isShowDetail = true;
-          isShowList = true;
-          break;
-        case GNMainViewSize.big:
-        default:
-          isShowMenu = true;
-          isShowList = true;
-          isShowDetail = true;
-          break;
-      }
-      if (_mainViewStatus == GNMainViewStatus.detail) {
-        isShowMenu = false;
-        isShowList = false;
-      }
-      return Flex(direction: Axis.horizontal, children: [
-        Visibility(
-          visible: isShowMenu,
-          child: _menu,
-        ),
-        s == GNMainViewSize.small ? Expanded(child: Visibility(
-          visible: isShowList,
-          child: _list,
-        )): Visibility(
-          visible: isShowList,
-          child: _list,
-        ),
-        s == GNMainViewSize.small ? Visibility(
-          visible: isShowDetail,
-          child: _detail,
-        ) :
-        Expanded(child: Visibility(
-          visible: isShowDetail,
-          child: _detail,
-        ),)
-      ]);
-    });
+    return Flex(direction: Axis.horizontal, children: [_menu, _list, _detail]);
+    // return GNResponsive.getResponsive((GNMainViewSize s) {
+    //   bool isShowMenu = true;
+    //   bool isShowList = true;
+    //   bool isShowDetail = true;
+    //   switch (s) {
+    //     case GNMainViewSize.middle:
+    //     case GNMainViewSize.small:
+    //       isShowMenu = true;
+    //       isShowDetail = true;
+    //       isShowList = true;
+    //       break;
+    //     case GNMainViewSize.big:
+    //     default:
+    //       isShowMenu = true;
+    //       isShowList = true;
+    //       isShowDetail = true;
+    //       break;
+    //   }
+    //   if (_mainViewStatus == GNMainViewStatus.detail) {
+    //     isShowMenu = false;
+    //     isShowList = false;
+    //   }
+    //   return Flex(direction: Axis.horizontal, children: [
+    //     Visibility(
+    //       visible: isShowMenu,
+    //       child: _menu,
+    //     ),
+    //     s == GNMainViewSize.small
+    //         ? Expanded(
+    //             child: Visibility(
+    //             visible: isShowList,
+    //             child: _list,
+    //           ))
+    //         : Visibility(
+    //             visible: isShowList,
+    //             child: _list,
+    //           ),
+    //     s == GNMainViewSize.small
+    //         ? Visibility(
+    //             visible: isShowDetail,
+    //             child: _detail,
+    //           )
+    //         : Expanded(
+    //             child: Visibility(
+    //               visible: isShowDetail,
+    //               child: _detail,
+    //             ),
+    //           )
+    //   ]);
+    // });
   }
 }

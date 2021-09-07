@@ -7,6 +7,8 @@ import 'package:stocks/models/tokenModel.dart';
 import 'package:stocks/models/dataModel.dart';
 import 'package:stocks/net/socket_manager.dart';
 import 'package:stocks/components/search/search.dart';
+import 'package:stocks/components/button/button_ wrapped.dart';
+import 'package:stocks/pages/page_action.dart';
 
 class FListView extends StatefulWidget {
   @override
@@ -28,7 +30,7 @@ class _FListViewState extends State<FListView> {
 
     setState(() {
       datas = [m, m2];
-      _subscriptionData();
+      // _subscriptionData();
     });
 
     super.initState();
@@ -85,8 +87,7 @@ class _FListViewState extends State<FListView> {
                 ),
                 Expanded(
                     child: StaggeredGridView.countBuilder(
-                  padding:
-                      EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 35),
+                  padding: EdgeInsets.only(top: 8, bottom: 35),
                   crossAxisCount: 2,
                   itemCount: datas.length,
                   itemBuilder: (BuildContext context, int index) =>
@@ -99,8 +100,8 @@ class _FListViewState extends State<FListView> {
                     }
                     // return StaggeredTile.fit(1);
                   },
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 0,
+                  crossAxisSpacing: 0,
                 ))
               ],
             ),
@@ -126,7 +127,7 @@ class _FListViewState extends State<FListView> {
 }
 
 class PairRowView extends StatelessWidget {
-  RowModel model;
+  final RowModel model;
 
   PairRowView(this.model);
 
@@ -144,13 +145,24 @@ class PairRowView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GNText("${model.token0.symbol}/${model.token1.symbol}"),
-        ...getHqRowView()
-      ],
-    );
+    return GKWrappedButton(
+        onPressed: () {
+          GNPagesAction()
+              .callAction(PageName.detail, FuncName.clickStock, data: [model]);
+        },
+        child: Row(
+          children: [
+            Expanded(
+                child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GNText("${model.token0.symbol}/${model.token1.symbol}"),
+                ...getHqRowView()
+              ],
+            ))
+          ],
+        ));
   }
 }
 

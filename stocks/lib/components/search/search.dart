@@ -6,6 +6,7 @@ import 'package:stocks/components/text/text.dart';
 import 'package:stocks/manager/theme_manager.dart';
 import 'package:stocks/manager/symbols_manager.dart';
 import 'package:stocks/manager/localizations_manager.dart';
+import 'package:stocks/components/button/button_ wrapped.dart';
 
 class GKSearchView extends StatefulWidget {
   void Function(Pair)? onSelected;
@@ -22,13 +23,10 @@ class _GKSearchViewState extends State<GKSearchView> {
   List<Widget> getRow() {
     List<Widget> r = [];
     result.forEach((element) {
-      r.add(MaterialButton(
+      r.add(GKWrappedButton(
         onPressed: (){
           this._onSelected!(element);
         },
-        hoverColor: GNTheme().bGColorType(BGColorType.highlight),
-        // height: 30,
-        padding: EdgeInsets.all(16),
         child: Row(
           children: [
             Column(

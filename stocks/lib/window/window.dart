@@ -31,9 +31,10 @@ class _Window extends State<Window> {
         buttonTheme: ButtonThemeData(
             minWidth: 0,
             height: 0,
+            buttonColor: Colors.transparent,
             padding: EdgeInsets.all(0),
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(0))));
+                borderRadius: BorderRadius.circular(4))));
     ThemeData darkThemeData = ThemeData(
         textSelectionTheme: TextSelectionThemeData(
             selectionColor: GNTheme().fontColorType(FontColorType.highlight)),
@@ -42,9 +43,10 @@ class _Window extends State<Window> {
         buttonTheme: ButtonThemeData(
             minWidth: 0,
             height: 0,
+            buttonColor: Colors.transparent,
             padding: EdgeInsets.all(0),
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(0))));
+                borderRadius: BorderRadius.circular(4))));
     nav.setZeroPage(MainPage());
     // nav.setZeroPage(Container(width: 300, height: 300, color: Colors.blue.withAlpha(0)));
     return ChangeNotifierProvider(
