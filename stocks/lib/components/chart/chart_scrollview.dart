@@ -37,18 +37,21 @@ class _ChartScrollViewState extends State<ChartScrollView> {
   }
 
   scrollControllerListener() {
-    // int scrollView
     int offset = _scrollController.offset.toInt();
-    if (offset > 0 && widget.datas != null) {
+    if (offset >= 0 && widget.datas != null) {
       ChartConfig config = widget.config ?? ChartConfig();
       int candleW = config.candleMinWidth;
-      int oneScreenNum = 500 ~/ candleW;
+      int oneScreenNum = config.width ~/ candleW;
 
       int beforeNum = offset ~/ candleW;
       int endNum = beforeNum + oneScreenNum;
+      int to = widget.datas!.length - beforeNum;
+      if (to > widget.datas!.length) {
+        to = widget.datas!.length;
+      }
       if (endNum < widget.datas!.length) {
         Iterable<HqChartData> nowDisplay_ =
-            widget.datas!.getRange(beforeNum, beforeNum + oneScreenNum);
+            widget.datas!.getRange(widget.datas!.length - 1 - beforeNum - oneScreenNum, to);
         List<HqChartData> nowDisplay = [];
         nowDisplay_.forEach((element) {
           nowDisplay.add(element);
@@ -72,7 +75,7 @@ class _ChartScrollViewState extends State<ChartScrollView> {
             scrollDirection: Axis.horizontal,
             controller: _scrollController,
             child: Container(
-              color: Colors.redAccent.withAlpha(10),
+              // color: Colors.redAccent.withAlpha(10),
               width: _scrollViewWidth,
               // height: 500,
             ))

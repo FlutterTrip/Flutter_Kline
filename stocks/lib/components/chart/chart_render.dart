@@ -9,8 +9,8 @@ class ChartRender extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.grey,
-      height: 300,
+      // color: Colors.grey,
+      // height: 300,
       child: CustomPaint(
       // isComplex: true,
       // willChange: true,

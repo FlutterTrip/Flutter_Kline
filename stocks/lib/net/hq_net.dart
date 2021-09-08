@@ -37,6 +37,7 @@ class HqNet {
   // ]
       obj.forEach((element) {
         HqChartData d = HqChartData();
+        d.time = element[0];
         d.kpj = element[1];
         d.spj = element[4];
         d.maxPrice = element[2];

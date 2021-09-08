@@ -10,7 +10,7 @@ class HqChartData extends HQData {
 
 class ChartConfig {
   int width = 500;
-  int heigh = 300;
+  int height = 300;
   int candleMinWidth = 10;
   int candleMaxWidth = 20;
   int paddingTop = 8;
