@@ -3,6 +3,9 @@ import 'package:stocks/manager/exchange_manager.dart';
 import 'package:stocks/models/dataModel.dart';
 import 'socket_manager.dart';
 
+String http_proxy = "127.0.0.1:7890";
+String https_proxy = "127.0.0.1:7890";
+
 /// 返回的原始数据进行解析，每个交易所都不一样，需要自行去实现不同的适配器
 mixin DataAdapterProtocol {
   SubscriptionType? filterDataType(dynamic data) => null;

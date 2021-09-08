@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:stocks/models/tokenModel.dart';
 import 'package:stocks/net/api_manager.dart';
@@ -14,10 +13,8 @@ class ProxyHttpOverrides extends HttpOverrides {
   }
 
   String _findProxy(url) {
-    return HttpClient.findProxyFromEnvironment(url, environment: {
-      "http_proxy": "127.0.0.1:7890",
-      "https_proxy": "127.0.0.1:7890"
-    });
+    return HttpClient.findProxyFromEnvironment(url,
+        environment: {"http_proxy": http_proxy, "https_proxy": https_proxy});
   }
 }
 

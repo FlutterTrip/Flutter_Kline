@@ -61,7 +61,7 @@ class _MainPageState extends State<MainPage>
 
   @override
   Widget build(BuildContext context) {
-    return Flex(direction: Axis.horizontal, children: [_menu, _list, _detail]);
+    return Flex(direction: Axis.horizontal, children: [_menu, _list, Expanded(child: _detail)]);
     // return GNResponsive.getResponsive((GNMainViewSize s) {
     //   bool isShowMenu = true;
     //   bool isShowList = true;

@@ -1,8 +1,6 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-
+import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
+import 'package:stocks/net/net_adapter.dart';
 
 BaseOptions opt = BaseOptions(
           connectTimeout: 60 * 1000,
@@ -16,6 +14,11 @@ class Net {
   static Net instance() {
     if (_instance == null) {
       _instance = Net._();
+      (_instance!.dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
+        client.findProxy = (uri) {
+          return "PROXY $http_proxy";
+        };
+      };
   }
     return _instance!;
   }

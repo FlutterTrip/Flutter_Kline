@@ -15,7 +15,7 @@ class SymbolsManager {
     if (_instance == null) {
       _instance = SymbolsManager._();
       ExchangeManager.exchanges.forEach((key, value) {
-        _instance?._updateSymbols(key);
+        // _instance?._updateSymbols(key);
       });
     }
     return _instance!;

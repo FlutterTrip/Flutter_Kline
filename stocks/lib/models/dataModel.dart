@@ -45,6 +45,7 @@ class BaseHQData {
   String nowPrice = "";
   String zdf = "";
   String kpj = "";
+  String spj = "";
   String maxPrice = "";
   String minPrice = "";
   String cjl = "";
