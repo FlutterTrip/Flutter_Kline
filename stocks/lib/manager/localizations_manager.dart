@@ -40,9 +40,10 @@ class GNLocalizations {
 
   static Map<String, Map<String, String>> _localizedValues = {
     'en': {
-      'Welcome To The FNote': 'Welcome To The FNote',
+      'Token': 'Token',
     },
     'zh': {
+      'Input here': '这儿',
       'Add tag': '添加标签',
       'empty!': '不能为空！',
       'There are multiple files in this folder. Are you sure to delete them?':
@@ -60,7 +61,7 @@ class GNLocalizations {
       'show add category menu': '创建类别',
       'Powered by Flutter': '基于 Flutter',
       'Login': '登录',
-      'Welcome To The FNote': '欢迎使用 FNote',
+      'Token': '代币',
     },
   };
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:stocks/components/space/space.dart';
 import 'package:stocks/components/text/text.dart';
 import 'package:stocks/manager/exchange_manager.dart';
 import 'package:stocks/manager/theme_manager.dart';
@@ -27,10 +28,9 @@ class _FListViewState extends State<FListView> {
     RowModel m2 = RowModel();
     m2.token0 = Token("BNB", "BNB");
     m2.token1 = Token("USDT", "USDT");
-
     setState(() {
       datas = [m, m2];
-      // _subscriptionData();
+      _subscriptionData();
     });
 
     super.initState();
@@ -126,19 +126,114 @@ class _FListViewState extends State<FListView> {
   }
 }
 
+class ZDAnimation extends StatefulWidget {
+  final PairZDStatus status;
+  const ZDAnimation({Key? key, this.status = PairZDStatus.normal})
+      : super(key: key);
+
+  @override
+  _ZDAnimationState createState() => _ZDAnimationState();
+}
+
+class _ZDAnimationState extends State<ZDAnimation>
+    with TickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  PairZDStatus _status = PairZDStatus.normal;
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+        duration: const Duration(milliseconds: 300),
+        reverseDuration: const Duration(milliseconds: 300),
+        vsync: this);
+    _animation = Tween(begin: 0.0, end: 1.0).animate(_controller);
+    // _animation.addStatusListener((status) {
+
+    // });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_status != widget.status) {
+      _status = widget.status;
+      _controller.reset();
+      _controller.forward();
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+      FadeTransition(
+          alwaysIncludeSemantics: true,
+          opacity: _animation,
+          child: Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(5)),
+                color: widget.status == PairZDStatus.up
+                    ? Colors.green
+                    : widget.status == PairZDStatus.down ? Colors.red : Colors.grey,
+              )))
+    ]);
+  }
+}
+
 class PairRowView extends StatelessWidget {
   final RowModel model;
-
   PairRowView(this.model);
+
+  Widget getZdfView(BaseHQData data) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(4)),
+        color: data.zdfNoUnit > 0 ? Colors.green : Colors.red,
+      ),
+      padding: EdgeInsets.all(2),
+      child: GNText(data.zdf,
+          fontSize: GNTheme().fontSizeType(FontSizeType.s),
+          color: Colors.white),
+    );
+  }
 
   List<Row> getHqRowView() {
     List<Row> r = [];
+
     model.hqDatas.forEach((element) {
-      r.add(Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        GNText(
-            "${ExchangeManager.getExchangeModel(element.exchangeSymbol)!.name}"),
-        GNText("${double.parse(element.nowPrice)} | ${element.zdf}"),
-      ]));
+      ExchangeModel? exchange =
+          ExchangeManager.getExchangeModel(element.exchangeSymbol);
+      r.add(Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            exchange!.logo!.length > 0
+                ? Image.network(
+                    exchange.logo!,
+                    width: GNTheme().fontSizeType(FontSizeType.s),
+                  )
+                : GNText("${exchange.name}"),
+            Row(
+              children: [
+                ZDAnimation(
+                  status: element.zdStatus,
+                ),
+                GNSpace(
+                  width: 8,
+                ),
+                GNText("${double.parse(element.nowPrice)}"),
+                GNSpace(
+                  width: 8,
+                ),
+                getZdfView(element)
+              ],
+            )
+          ]));
     });
     return r;
   }
@@ -157,7 +252,21 @@ class PairRowView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                GNText("${model.token0.symbol}/${model.token1.symbol}"),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    GNText(
+                      model.token0.symbol,
+                      color: GNTheme().fontColorType(FontColorType.bright),
+                    ),
+                    GNText(
+                      model.token1.symbol,
+                      color: GNTheme().fontColorType(FontColorType.gray),
+                      fontSize: GNTheme().fontSizeType(FontSizeType.xs),
+                    ),
+                  ],
+                ),
                 ...getHqRowView()
               ],
             ))
@@ -181,6 +290,14 @@ class RowModel extends Pair {
     for (var i = 0; i < hqDatas.length; i++) {
       BaseHQData element = hqDatas[i];
       if (element.exchangeSymbol == data.exchangeSymbol) {
+        BaseHQData sd = hqDatas[i];
+        if (data.zdfNoUnit > sd.zdfNoUnit) {
+          data.zdStatus = PairZDStatus.up;
+        } else if (data.zdfNoUnit < sd.zdfNoUnit) {
+          data.zdStatus = PairZDStatus.down;
+        } else {
+          data.zdStatus = PairZDStatus.normal;
+        }
         hqDatas[i] = data;
         isNewExchangeData = false;
       }

@@ -38,22 +38,27 @@ import 'tokenModel.dart';
 //     "v": "10000",           // 成交量
 //     "q": "18"               // 成交额
 //   }
+
+enum PairZDStatus { up, down, normal }
 class BaseHQData {
   int time = 0;
   ExchangeSymbol exchangeSymbol = ExchangeSymbol.BSC;
   String symbol = "";
   String nowPrice = "";
   String zdf = "";
+  double zdfNoUnit = 0;
   String kpj = "";
   String spj = "";
   String maxPrice = "";
   String minPrice = "";
   String cjl = "";
   String cje = "";
+  PairZDStatus zdStatus = PairZDStatus.normal;
   String getZDF() {
     double np = double.parse(nowPrice);
     double kpjTemp = double.parse(kpj);
     double zdf = ((np - kpjTemp) / kpjTemp) * 100;
+    zdfNoUnit = zdf;
     return "${zdf.toStringAsFixed(2)}%";
   }
 
