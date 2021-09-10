@@ -1,16 +1,15 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:stocks/components/chart/chart_models.dart';
-import 'package:stocks/components/chart/chart_view.dart';
-import 'package:stocks/models/tokenModel.dart';
-import 'package:stocks/components/chart/chart_render.dart';
+import 'package:stocks/components/chart/renders/chart_kline_render.dart';
 
-class ChartScrollView extends StatefulWidget {
+class ChartContainer extends StatefulWidget {
   final List<HqChartData> datas;
   final ChartType chartType;
   final List<SubChartType>? subChartTypes;
   final ChartConfig config;
 
-  ChartScrollView(
+  ChartContainer(
       {Key? key,
       required this.datas,
       required this.config,
@@ -18,12 +17,14 @@ class ChartScrollView extends StatefulWidget {
       this.subChartTypes})
       : super(key: key);
   @override
-  _ChartScrollViewState createState() => _ChartScrollViewState();
+  _ChartContainerState createState() => _ChartContainerState();
 }
 
-class _ChartScrollViewState extends State<ChartScrollView> {
+class _ChartContainerState extends State<ChartContainer> {
   late double _scrollViewWidth;
   List<HqChartData> _nowDisplay = [];
+  double _maxValue = 0;
+  double _minValue = 0;
   final ScrollController _scrollController = ScrollController();
   @override
   void initState() {
@@ -33,8 +34,7 @@ class _ChartScrollViewState extends State<ChartScrollView> {
   }
 
   @override
-  void didUpdateWidget(ChartScrollView oldWidget) {
-    print('parent didUpdateWidget');
+  void didUpdateWidget(ChartContainer oldWidget) {
     reload();
     super.didUpdateWidget(oldWidget);
   }
@@ -52,7 +52,7 @@ class _ChartScrollViewState extends State<ChartScrollView> {
 
   scrollControllerListener() {
     int offset = _scrollController.offset.toInt();
-    if (offset >= 0) {
+    if (offset >= 0 && widget.datas.length > 0) {
       ChartConfig config = widget.config;
       int candleW = config.candleMinWidth;
       int oneScreenNum = config.width ~/ candleW;
@@ -70,22 +70,41 @@ class _ChartScrollViewState extends State<ChartScrollView> {
         nowDisplay_.forEach((element) {
           nowDisplay.add(element);
         });
+
+        List<double> nums = [];
+        nowDisplay.forEach((element) {
+          nums.add(double.parse(element.maxPrice));
+          nums.add(double.parse(element.minPrice));
+        });
+
+        double maxValue = nums.reduce(max);
+        double minValue = nums.reduce(min);
+
+        double pt = (config.paddingTop / config.height) * (maxValue - minValue);
+        double pb =
+            (config.paddingBottom / config.height) * (maxValue - minValue);
+
+        maxValue += pt;
+        minValue -= pb;
+
         setState(() {
           _nowDisplay = nowDisplay;
+          _maxValue = maxValue;
+          _minValue = minValue;
         });
       }
     }
-
-    // print();
   }
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        ChartRender(
-          datas: _nowDisplay,
+        KlineRender(
           config: widget.config,
+          datas: _nowDisplay,
+          maxValue: _maxValue,
+          minValue: _minValue,
         ),
         SingleChildScrollView(
             reverse: true,

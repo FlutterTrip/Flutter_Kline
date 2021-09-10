@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:stocks/components/chart/chart_scrollview.dart';
+import 'package:stocks/components/chart/chart_container.dart';
 import 'package:stocks/components/chart/chart_models.dart';
-import 'package:stocks/components/text/text.dart';
 
 class ChartView extends StatelessWidget {
   final List<HqChartData>? datas;
@@ -21,7 +20,7 @@ class ChartView extends StatelessWidget {
     return Container(
       width: config.width.toDouble(),
       height: config.height.toDouble(),
-      child: ChartScrollView(
+      child: ChartContainer(
             datas: this.datas ?? [],
             chartType: this.chartType,
             config: this.config,

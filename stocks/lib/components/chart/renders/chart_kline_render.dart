@@ -1,7 +1,28 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:stocks/components/chart/chart_models.dart';
+
+class KlineRender extends StatelessWidget {
+  final ChartConfig config;
+  final List<HqChartData> datas;
+  final double maxValue;
+  final double minValue;
+  KlineRender({Key? key, required this.config, required this.datas, required this.maxValue, required this.minValue})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        // color: Colors.grey,
+        // height: 300,
+        child: CustomPaint(
+      // isComplex: true,
+      // willChange: true,
+      size: Size(config.width.toDouble(), config.height.toDouble()),
+      painter: CandlePainter(datas, config, maxValue, minValue),
+    ));
+  }
+}
 
 class CandleModel extends HqChartData {
   int index = 0;
@@ -64,30 +85,15 @@ class CandlePainter extends CustomPainter {
   List<HqChartData> datas = [];
   List<CandleModel> _paintModels = [];
 
-  CandlePainter(List<HqChartData> _datas, ChartConfig _config) {
+  CandlePainter(List<HqChartData> _datas, ChartConfig _config, double _maxValue,
+      double _minValue) {
     config = _config;
     if (_datas.length > 0) {
-      List<double> nums = [];
-      _datas.forEach((element) {
-        datas.add(element);
-        nums.add(double.parse(element.maxPrice));
-        nums.add(double.parse(element.minPrice));
-      });
-
-      double maxValue = nums.reduce(max);
-      double minValue = nums.reduce(min);
-
-      double pt = (_config.paddingTop / _config.height) * (maxValue - minValue);
-      double pb =
-          (_config.paddingBottom / _config.height) * (maxValue - minValue);
-
-      maxValue += pt;
-      minValue -= pb;
       int index = 0;
-      datas.forEach((element) {
+      _datas.forEach((element) {
         CandleModel m = CandleModel(element, _config);
-        m.maxValue = maxValue;
-        m.minValue = minValue;
+        m.maxValue = _maxValue;
+        m.minValue = _minValue;
         m.index = index;
         _paintModels.add(m);
         index++;

@@ -196,9 +196,9 @@ class GNTheme with ChangeNotifier {
   ];
 
   Map<ZDColorType, Color> zdColor = {
-    ZDColorType.up: Colors.green,
-    ZDColorType.down: Colors.red,
-    ZDColorType.normal: Colors.grey
+    ZDColorType.up: Color(0xFF21BF73),
+    ZDColorType.down: Color(0xFFFD5E53),
+    ZDColorType.normal: Color(0xFFC9CCD5)
   };
 
   Map sourceThemeData = GNThemeManager.themeData["default"];
