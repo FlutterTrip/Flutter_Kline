@@ -66,31 +66,33 @@ class CandlePainter extends CustomPainter {
 
   CandlePainter(List<HqChartData> _datas, ChartConfig _config) {
     config = _config;
-    List<double> nums = [];
-    _datas.forEach((element) {
-      datas.add(element);
-      nums.add(double.parse(element.maxPrice));
-      nums.add(double.parse(element.minPrice));
-    });
+    if (_datas.length > 0) {
+      List<double> nums = [];
+      _datas.forEach((element) {
+        datas.add(element);
+        nums.add(double.parse(element.maxPrice));
+        nums.add(double.parse(element.minPrice));
+      });
 
-    double maxValue = nums.reduce(max);
-    double minValue = nums.reduce(min);
+      double maxValue = nums.reduce(max);
+      double minValue = nums.reduce(min);
 
-    double pt = (_config.paddingTop / _config.height) * (maxValue - minValue);
-    double pb =
-        (_config.paddingBottom / _config.height) * (maxValue - minValue);
+      double pt = (_config.paddingTop / _config.height) * (maxValue - minValue);
+      double pb =
+          (_config.paddingBottom / _config.height) * (maxValue - minValue);
 
-    maxValue += pt;
-    minValue -= pb;
-    int index = 0;
-    datas.forEach((element) {
-      CandleModel m = CandleModel(element, _config);
-      m.maxValue = maxValue;
-      m.minValue = minValue;
-      m.index = index;
-      _paintModels.add(m);
-      index++;
-    });
+      maxValue += pt;
+      minValue -= pb;
+      int index = 0;
+      datas.forEach((element) {
+        CandleModel m = CandleModel(element, _config);
+        m.maxValue = maxValue;
+        m.minValue = minValue;
+        m.index = index;
+        _paintModels.add(m);
+        index++;
+      });
+    }
   }
 
   @override
@@ -103,7 +105,7 @@ class CandlePainter extends CustomPainter {
       Point p = element.point;
       Size s = element.size;
       // print(
-          // "$p|$s|${element.kpj}:${element.spj} || ${element.convertH(double.parse(element.kpj) - double.parse(element.spj))}");
+      // "$p|$s|${element.kpj}:${element.spj} || ${element.convertH(double.parse(element.kpj) - double.parse(element.spj))}");
       Rect r = Rect.fromLTWH(p.x.toDouble(), p.y.toDouble(), s.width, s.height);
       // print(DateTime.fromMillisecondsSinceEpoch(element.time));
       canvas.drawRect(r, paint..color = element.color);

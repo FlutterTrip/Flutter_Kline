@@ -12,8 +12,8 @@ class APIManager {
   Map<ExchangeSymbol, Map<apiType, Map<apiReqType, String>>> apiMap = {
     ExchangeSymbol.BSC: {
       apiType.baseUrl: {
-        apiReqType.socket: 'wss://stream.binance.com:9443/ws',
-        apiReqType.get: 'https://api.binance.com'
+        apiReqType.socket: 'wss://stream2.binance.com:9443/ws',
+        apiReqType.get: 'https://api2.binance.com'
       },
       apiType.kline: {apiReqType.socket: '', apiReqType.get: '/api/v3/klines'},
       apiType.symbols: {apiReqType.get: '/api/v3/exchangeInfo'}

@@ -29,6 +29,10 @@ enum BGColorType {
   warning
 }
 
+enum ZDColorType {
+  up, down, normal
+}
+
 enum FontFamilyType { content, title, subTitle, other }
 
 class GNThemeManager {
@@ -190,6 +194,13 @@ class GNTheme with ChangeNotifier {
     0xFF4f3961,
     0xFFf35588
   ];
+
+  Map<ZDColorType, Color> zdColor = {
+    ZDColorType.up: Colors.green,
+    ZDColorType.down: Colors.red,
+    ZDColorType.normal: Colors.grey
+  };
+
   Map sourceThemeData = GNThemeManager.themeData["default"];
   // TODO: useless
   int backgroundAlpha = 0;
@@ -212,6 +223,10 @@ class GNTheme with ChangeNotifier {
   setBackgroundAlpha(int alpha) {
     this.backgroundAlpha = alpha;
     notifyListeners();
+  }
+
+  Color getZDColor(ZDColorType type) {
+      return zdColor[type]!;
   }
 
   Color getTagsColor() {

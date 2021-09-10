@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stocks/components/text/text.dart';
 import 'package:stocks/manager/exchange_manager.dart';
-import 'package:stocks/models/dataModel.dart';
+import 'package:stocks/manager/theme_manager.dart';
 import 'package:stocks/models/tokenModel.dart';
 import 'package:stocks/pages/page_action.dart';
 import 'package:stocks/net/hq_net.dart';
@@ -37,9 +37,9 @@ class _DetailViewState extends State<DetailView> {
   testData(Pair pair) {
     HqNet.getAllHqData(ExchangeSymbol.BSC, pair).then((value) {
       // print(value);
-        setState(() {
-          _chartData = value;
-        });
+      setState(() {
+        _chartData = value;
+      });
     });
     // Net.get(APIManager.getApi(E, type))
   }
@@ -47,16 +47,33 @@ class _DetailViewState extends State<DetailView> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: EdgeInsets.only(top: 16),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GNText(_pair?.symbol ?? "--"),
-          _chartData.length > 0 ? ChartView(
+         Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              GNText(
+                _pair != null ? _pair!.token0.symbol : '--',
+                color: GNTheme().fontColorType(FontColorType.bright),
+                fontSize: GNTheme().fontSizeType(FontSizeType.lg),
+              ),
+              GNText(
+                 _pair != null ? _pair!.token1.symbol : '--',
+                color: GNTheme().fontColorType(FontColorType.gray),
+                fontSize: GNTheme().fontSizeType(FontSizeType.md),
+              ),
+            ],
+          ),
+          ChartView(
             datas: _chartData,
             config: ChartConfig(),
             chartType: ChartType.Kline,
             subChartTypes: [],
-          ) : GNText("no data")
+          )
         ],
       ),
     );

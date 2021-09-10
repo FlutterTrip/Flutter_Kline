@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stocks/manager/theme_manager.dart';
 import 'package:stocks/models/dataModel.dart';
 
 enum ChartType { Kline, line }
@@ -15,6 +16,6 @@ class ChartConfig {
   int candleMaxWidth = 20;
   int paddingTop = 8;
   int paddingBottom = 8;
-  Color buy = Colors.green;
-  Color sell = Colors.red;
+  Color buy = GNTheme().getZDColor(ZDColorType.up);
+  Color sell = GNTheme().getZDColor(ZDColorType.down);
 }

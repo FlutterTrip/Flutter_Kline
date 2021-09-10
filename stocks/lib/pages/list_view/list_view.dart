@@ -72,7 +72,7 @@ class _FListViewState extends State<FListView> {
   @override
   Widget build(BuildContext context) {
     return Container(
-        // color: Colors.green,
+        // color: GNTheme().getZDColor(ZDColorType.up),
         padding: EdgeInsets.only(top: 16, left: 8),
         constraints: BoxConstraints(maxWidth: 220),
         child: Stack(
@@ -178,8 +178,8 @@ class _ZDAnimationState extends State<ZDAnimation>
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.all(Radius.circular(5)),
                 color: widget.status == PairZDStatus.up
-                    ? Colors.green
-                    : widget.status == PairZDStatus.down ? Colors.red : Colors.grey,
+                    ? GNTheme().getZDColor(ZDColorType.up)
+                    : widget.status == PairZDStatus.down ? GNTheme().getZDColor(ZDColorType.down) : GNTheme().getZDColor(ZDColorType.normal),
               )))
     ]);
   }
@@ -193,7 +193,7 @@ class PairRowView extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(4)),
-        color: data.zdfNoUnit > 0 ? Colors.green : Colors.red,
+        color: data.zdfNoUnit > 0 ? GNTheme().getZDColor(ZDColorType.up) : GNTheme().getZDColor(ZDColorType.down),
       ),
       padding: EdgeInsets.all(2),
       child: GNText(data.zdf,
