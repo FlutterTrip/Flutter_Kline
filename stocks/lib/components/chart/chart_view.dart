@@ -4,27 +4,25 @@ import 'package:stocks/components/chart/chart_models.dart';
 
 class ChartView extends StatelessWidget {
   final List<HqChartData>? datas;
-  final ChartType chartType;
-  final ChartConfig config;
-  final List<SubChartType>? subChartTypes;
+  final List<ChartBaseConfig > configs;
+  final List<ChartIndexType>? chartIndexTypes;
   ChartView(
       {Key? key,
       this.datas,
-      this.chartType = ChartType.Kline,
-      this.subChartTypes,
-      required this.config})
+      this.chartIndexTypes,
+      required this.configs})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: config.width.toDouble(),
-      height: config.height.toDouble(),
-      child: ChartContainer(
-            datas: this.datas ?? [],
-            chartType: this.chartType,
-            config: this.config,
-            subChartTypes: this.subChartTypes)
+    return OrientationBuilder(
+      builder: (context, o) {
+        return Container(
+            child: ChartContainer(
+                datas: this.datas ?? [],
+                configs: this.configs,
+                chartIndexTypes: this.chartIndexTypes));
+      },
     );
   }
 }

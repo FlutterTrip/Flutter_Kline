@@ -18,8 +18,15 @@ class DetailView extends StatefulWidget {
 class _DetailViewState extends State<DetailView> {
   Pair? _pair;
   List<HqChartData> _chartData = [];
+  late List<ChartBaseConfig> _configs;
   @override
   void initState() {
+    KlineChartConfig kConfig = KlineChartConfig();
+    kConfig.isAutoWidth = true;
+    VolChartConfig vConfig = VolChartConfig();
+    vConfig.isAutoWidth = true;
+    _configs = [kConfig, vConfig];
+
     GNPagesAction().registerAction(PageName.detail, FuncName.clickStock, widget,
         (name, funcName, {data}) {
       if (data != null && data.length > 0) {
@@ -52,7 +59,7 @@ class _DetailViewState extends State<DetailView> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-         Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -62,17 +69,20 @@ class _DetailViewState extends State<DetailView> {
                 fontSize: GNTheme().fontSizeType(FontSizeType.lg),
               ),
               GNText(
-                 _pair != null ? _pair!.token1.symbol : '--',
+                _pair != null ? _pair!.token1.symbol : '--',
                 color: GNTheme().fontColorType(FontColorType.gray),
                 fontSize: GNTheme().fontSizeType(FontSizeType.md),
               ),
             ],
           ),
-          ChartView(
-            datas: _chartData,
-            config: ChartConfig(),
-            chartType: ChartType.Kline,
-            subChartTypes: [],
+          Row(
+            children: [
+              Expanded(
+                  child: ChartView(
+                datas: _chartData,
+                configs: _configs,
+              ))
+            ],
           )
         ],
       ),

@@ -2,12 +2,12 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:stocks/components/chart/chart_models.dart';
 
-class KlineRender extends StatelessWidget {
-  final KlineChartConfig config;
+class VolRender extends StatelessWidget {
+  final VolChartConfig config;
   final List<HqChartData> datas;
   final double maxValue;
   final double minValue;
-  KlineRender({Key? key, required this.config, required this.datas, required this.maxValue, required this.minValue})
+  VolRender({Key? key, required this.config, required this.datas, required this.maxValue, required this.minValue})
       : super(key: key);
 
   @override
@@ -19,17 +19,17 @@ class KlineRender extends StatelessWidget {
       // isComplex: true,
       // willChange: true,
       size: Size(config.width.toDouble(), config.height.toDouble()),
-      painter: CandlePainter(datas, config, maxValue, minValue),
+      painter: VolPainter(datas, config, maxValue, minValue),
     ));
   }
 }
 
-class CandleModel extends HqChartData {
+class VolModel extends HqChartData {
   int index = 0;
   double maxValue = 0;
   double minValue = 0;
-  KlineChartConfig config = KlineChartConfig();
-  CandleModel(HqChartData data, KlineChartConfig _config) {
+  VolChartConfig config = VolChartConfig();
+  VolModel(HqChartData data, VolChartConfig _config) {
     config = _config;
     time = data.time;
     exchangeSymbol = data.exchangeSymbol;
@@ -54,44 +54,34 @@ class CandleModel extends HqChartData {
   }
 
   convertH(double source) {
-    return (source / (maxValue - minValue)) * config.height;
+    return ((source - minValue) / (maxValue - minValue)) * config.height;
   }
 
   Size get size {
-    double width = config.candleMinWidth.toDouble();
-    double t = (double.parse(kpj) - double.parse(spj)).abs();
-    double height = convertH(t);
+    double width = config.elementNowWidth.toDouble();
+    double height = convertH(double.parse(cjl));
     return Size(width, height);
   }
 
   Point get point {
-    num x = index * config.candleMinWidth;
-    num y = convertY(max(double.parse(spj), double.parse(kpj)));
+    num x = index * config.elementNowWidth;
+    num y = convertY(double.parse(cjl));
     return Point(x, y);
-  }
-
-  Point get linePoint {
-    return Point(index * config.candleMinWidth + config.candleMinWidth / 2,
-        convertY(double.parse(maxPrice)));
-  }
-
-  double get lineHeight {
-    return convertH(double.parse(maxPrice) - double.parse(minPrice));
   }
 }
 
-class CandlePainter extends CustomPainter {
-  late KlineChartConfig config;
+class VolPainter extends CustomPainter {
+  late VolChartConfig config;
   List<HqChartData> datas = [];
-  List<CandleModel> _paintModels = [];
+  List<VolModel> _paintModels = [];
 
-  CandlePainter(List<HqChartData> _datas, KlineChartConfig _config, double _maxValue,
+  VolPainter(List<HqChartData> _datas, VolChartConfig _config, double _maxValue,
       double _minValue) {
     config = _config;
     if (_datas.length > 0) {
       int index = 0;
       _datas.forEach((element) {
-        CandleModel m = CandleModel(element, _config);
+        VolModel m = VolModel(element, _config);
         m.maxValue = _maxValue;
         m.minValue = _minValue;
         m.index = index;
@@ -110,15 +100,9 @@ class CandlePainter extends CustomPainter {
       Size s = element.size;
       // print(
       // "$p|$s|${element.kpj}:${element.spj} || ${element.convertH(double.parse(element.kpj) - double.parse(element.spj))}");
-      Rect r = Rect.fromLTWH(p.x.toDouble(), p.y.toDouble(), s.width, s.height);
+      Rect r = Rect.fromLTWH(p.x.toDouble() + 1, p.y.toDouble(), s.width - 1, s.height);
       // print(DateTime.fromMillisecondsSinceEpoch(element.time));
       canvas.drawRect(r, paint..color = element.color);
-      canvas.drawLine(
-          Offset(
-              element.linePoint.x.toDouble(), element.linePoint.y.toDouble()),
-          Offset(element.linePoint.x.toDouble(),
-              element.linePoint.y.toDouble() + element.lineHeight),
-          paint);
     });
   }
 

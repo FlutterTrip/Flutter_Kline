@@ -40,6 +40,7 @@ class HqNet {
         d.time = element[0];
         d.kpj = element[1];
         d.spj = element[4];
+        d.cjl = element[5];
         d.maxPrice = element[2];
         d.minPrice = element[3];
         d.exchangeSymbol = symbol;
