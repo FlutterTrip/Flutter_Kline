@@ -12,15 +12,14 @@ class VolRender extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        // color: Colors.grey,
-        // height: 300,
-        child: CustomPaint(
+    return CustomPaint(
       // isComplex: true,
       // willChange: true,
-      size: Size(config.width.toDouble(), config.height.toDouble()),
       painter: VolPainter(datas, config, maxValue, minValue),
-    ));
+      child: Container(
+        height: config.height.toDouble(),
+      ),
+    );
   }
 }
 

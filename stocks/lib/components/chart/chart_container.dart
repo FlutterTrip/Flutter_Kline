@@ -6,15 +6,15 @@ import 'package:stocks/components/chart/renders/chart_vol_render.dart';
 
 class ChartContainer extends StatefulWidget {
   final List<HqChartData> datas;
-  final ChartType chartType;
   final List<ChartBaseConfig> configs;
   final List<ChartIndexType>? chartIndexTypes;
+  final ScrollController? scrollController;
 
   ChartContainer(
       {Key? key,
       required this.datas,
       required this.configs,
-      this.chartType = ChartType.Kline,
+      this.scrollController,
       this.chartIndexTypes})
       : super(key: key);
   @override
@@ -22,33 +22,48 @@ class ChartContainer extends StatefulWidget {
 }
 
 class _ChartContainerState extends State<ChartContainer> {
-  late double _scrollViewWidth;
   List<HqChartData> _nowDisplay = [];
   Map<ChartType, List<double>> _maxAndMinTemp = {};
-
-  final ScrollController _scrollController = ScrollController();
-  @override
-  void initState() {
-    _scrollController.addListener(scrollControllerListener);
-    _scrollViewWidth = widget.configs[0].width.toDouble();
-    super.initState();
-  }
+  ScrollController? _scrollController;
 
   @override
   void didUpdateWidget(ChartContainer oldWidget) {
     reload();
+
+    if (widget.scrollController != null) {
+      _scrollController = widget.scrollController;
+      _scrollController!.addListener(scrollControllerListener);
+    }
     super.didUpdateWidget(oldWidget);
+
+    //  Size? size;
+    // if (widget.datas != null) {
+    //   if (widget.configs.length > 0) {
+    //     size = context.findRenderObject()?.paintBounds.size;
+    //   }
+    // }
+    // print(size);
+  }
+
+  @override
+  void dispose() {
+    if (_scrollController != null) {
+      _scrollController!.dispose();
+    }
+    super.dispose();
   }
 
   reload() {
-    if (widget.configs.length > 0) {
+    if (widget.configs.length > 0 && _scrollController != null) {
       scrollControllerListener();
     }
   }
 
   analysisKline(int offset, KlineChartConfig config) {
+    Size? size = context.findRenderObject()?.paintBounds.size;
+    int width = size == null ? config.width : size.width.toInt();
     int candleW = config.candleNowWidth;
-    int oneScreenNum = config.width ~/ candleW;
+    int oneScreenNum = width ~/ candleW;
     int rightNum = offset ~/ candleW;
     int fromNum = rightNum + oneScreenNum;
     if (fromNum > widget.datas.length) {
@@ -81,9 +96,10 @@ class _ChartContainerState extends State<ChartContainer> {
   }
 
   analysisVol(int offset, VolChartConfig config) {
-    
+    Size? size = context.findRenderObject()?.paintBounds.size;
+    int width = size == null ? config.width : size.width.toInt();
     int candleW = config.elementNowWidth;
-    int oneScreenNum = config.width ~/ candleW;
+    int oneScreenNum = width ~/ candleW;
     int rightNum = offset ~/ candleW;
     int fromNum = rightNum + oneScreenNum;
     if (fromNum > widget.datas.length) {
@@ -115,7 +131,7 @@ class _ChartContainerState extends State<ChartContainer> {
   }
 
   scrollControllerListener() {
-    int offset = _scrollController.offset.toInt();
+    int offset = _scrollController!.offset.toInt();
     if (offset >= 0 && widget.datas.length > 0) {
       widget.configs.forEach((element) {
         switch (element.type) {
@@ -136,27 +152,12 @@ class _ChartContainerState extends State<ChartContainer> {
     List<Widget> t = [];
     if (widget.configs.length > 0) {
       widget.configs.forEach((element) {
-        Size? size = context.findRenderObject()?.paintBounds.size;
-        if (size != null) {
-          if (element.isAutoWidth) {
-            element.width = size.width.toInt();
-          }
-          // if (config.isAutoHeight) {
-          //   config.height = size.height.toInt();
-          // }
-        }
         List<double> maxMinList = _maxAndMinTemp[element.type] ?? [0, 0];
         double _maxValue = maxMinList[0];
         double _minValue = maxMinList[1];
         switch (element.type) {
           case ChartType.Kline:
             KlineChartConfig config = element as KlineChartConfig;
-            if (widget.datas.length > 0) {
-              setState(() {
-                _scrollViewWidth =
-                    widget.datas.length * config.candleNowWidth * 1.0;
-              });
-            }
 
             t.add(KlineRender(
               config: config,
@@ -188,19 +189,12 @@ class _ChartContainerState extends State<ChartContainer> {
 
   @override
   Widget build(BuildContext context) {
+    List<Widget> charts = getRenders();
     return Stack(
       children: [
         Column(
-          children: getRenders(),
+          children: [...charts],
         ),
-        Positioned.fill(
-            child: SingleChildScrollView(
-                reverse: true,
-                scrollDirection: Axis.horizontal,
-                controller: _scrollController,
-                child: Container(
-                  width: _scrollViewWidth,
-                )))
       ],
     );
   }
