@@ -79,7 +79,7 @@ class _FListViewState extends State<FListView> {
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: [                
                 GNText(
                   "STOCKS",
                   fontSize: GNTheme().fontSizeType(FontSizeType.lg),

@@ -35,8 +35,9 @@ class _ChartContainerState extends State<ChartContainer> {
           _scrollContentWidth = widget.datas.length * config.nowWidth * 1.0;
         });
       }
+      scrollControllerListener();
     }
-    scrollControllerListener();
+   
     super.didUpdateWidget(oldWidget);
   }
 
@@ -81,25 +82,27 @@ class _ChartContainerState extends State<ChartContainer> {
   }
 
   Widget getReanderView(ChartBaseConfig config) {
-
-    switch (config.type) {
-      case ChartType.Kline:
-        return CustomPaint(
-          child: Container(
-            height: config.height.toDouble(),
-          ),
-          painter: CandlePainter(_nowDisplayData, config as KlineChartConfig),
-        );
-      case ChartType.Vol:
-        return CustomPaint(
-          child: Container(
-            height: config.height.toDouble(),
-          ),
-          painter: VolPainter(_nowDisplayData, config as VolChartConfig),
-        );
-      default:
-        return Container();
+    if (widget.datas.length > 0) {
+      switch (config.type) {
+        case ChartType.Kline:
+          return CustomPaint(
+            child: Container(
+              height: config.height.toDouble(),
+            ),
+            painter: CandlePainter(_nowDisplayData, config as KlineChartConfig),
+          );
+        case ChartType.Vol:
+          return CustomPaint(
+            child: Container(
+              height: config.height.toDouble(),
+            ),
+            painter: VolPainter(_nowDisplayData, config as VolChartConfig),
+          );
+        default:
+          return Container();
+      }
     }
+    return Container();
   }
 
   @override
