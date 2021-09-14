@@ -58,7 +58,7 @@ class ChartBaseConfig {
   Color buy = GNTheme().getZDColor(ZDColorType.up);
   Color sell = GNTheme().getZDColor(ZDColorType.down);
 
-  GridConfig gridConfig = GridConfig();
+  GridConfig? gridConfig = GridConfig();
 
 
 }
