@@ -2,28 +2,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:stocks/components/chart/chart_models.dart';
 
-class KlineRender extends StatelessWidget {
-  final KlineChartConfig config;
-  final List<HqChartData> datas;
-  final double maxValue;
-  final double minValue;
-  KlineRender({Key? key, required this.config, required this.datas, required this.maxValue, required this.minValue})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return  CustomPaint(
-      // isComplex: true,
-      // willChange: true,
-      // size: Size(config.width.toDouble(), ),
-      painter: CandlePainter(datas, config, maxValue, minValue),
-      child: Container(
-        height: config.height.toDouble(),
-      ),
-    );
-  }
-}
-
 class CandleModel extends HqChartData {
   int index = 0;
   double maxValue = 0;
@@ -58,20 +36,20 @@ class CandleModel extends HqChartData {
   }
 
   Size get size {
-    double width = config.candleMinWidth.toDouble();
+    double width = config.minWidth.toDouble();
     double t = (double.parse(kpj) - double.parse(spj)).abs();
     double height = convertH(t);
     return Size(width, height);
   }
 
   Point get point {
-    num x = index * config.candleMinWidth;
+    num x = index * config.minWidth;
     num y = convertY(max(double.parse(spj), double.parse(kpj)));
     return Point(x, y);
   }
 
   Point get linePoint {
-    return Point(index * config.candleMinWidth + config.candleMinWidth / 2,
+    return Point(index * config.minWidth + config.minWidth / 2,
         convertY(double.parse(maxPrice)));
   }
 
@@ -82,22 +60,47 @@ class CandleModel extends HqChartData {
 
 class CandlePainter extends CustomPainter {
   late KlineChartConfig config;
-  List<HqChartData> datas = [];
   List<CandleModel> _paintModels = [];
 
-  CandlePainter(List<HqChartData> _datas, KlineChartConfig _config, double _maxValue,
-      double _minValue) {
+  CandlePainter(List<HqChartData> _datas, KlineChartConfig _config) {
     config = _config;
     if (_datas.length > 0) {
+      List<double> nums = [];
+      _datas.forEach((element) {
+        nums.add(double.parse(element.maxPrice));
+        nums.add(double.parse(element.minPrice));
+      });
+
+      double maxValue = nums.reduce(max);
+      double minValue = nums.reduce(min);
+
+      double pt = (config.paddingTop / config.height) * (maxValue - minValue);
+      double pb =
+          (config.paddingBottom / config.height) * (maxValue - minValue);
+      maxValue += pt;
+      minValue -= pb;
+
       int index = 0;
       _datas.forEach((element) {
         CandleModel m = CandleModel(element, _config);
-        m.maxValue = _maxValue;
-        m.minValue = _minValue;
+        m.maxValue = maxValue;
+        m.minValue = minValue;
         m.index = index;
         _paintModels.add(m);
         index++;
       });
+    }
+  }
+
+  grid(Canvas canvas, Size size) {
+    Paint paint = Paint();
+    GridConfig gridConfig = config.gridConfig;
+    paint.strokeWidth = gridConfig.lineWidth;
+    paint.color = gridConfig.lineColor;
+
+    double rowH = config.height / gridConfig.row;
+    for (var i = 0; i <= gridConfig.row; i++) {
+      canvas.drawLine(Offset(0, rowH * i), Offset(size.width, rowH * i), paint);
     }
   }
 
@@ -120,6 +123,10 @@ class CandlePainter extends CustomPainter {
               element.linePoint.y.toDouble() + element.lineHeight),
           paint);
     });
+
+    if (config.gridConfig != null) {
+      grid(canvas, size);
+    }
   }
 
   @override

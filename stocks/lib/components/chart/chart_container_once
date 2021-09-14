@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:stocks/components/chart/chart_models.dart';
-import 'package:stocks/components/chart/renders/chart_grid_render.dart';
+import 'package:stocks/components/chart/renders/chart_grid_render.dart.t';
 
 class OnceChartContainer extends StatefulWidget {
   final List<HqChartData> datas;

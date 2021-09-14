@@ -21,13 +21,11 @@ class _DetailViewState extends State<DetailView> {
   late List<ChartBaseConfig> _configs;
   @override
   void initState() {
-    GridChartConfig gConfig = GridChartConfig();
-    gConfig.isAutoWidth = true;
     KlineChartConfig kConfig = KlineChartConfig();
     kConfig.isAutoWidth = true;
     VolChartConfig vConfig = VolChartConfig();
     vConfig.isAutoWidth = true;
-    _configs = [gConfig, kConfig, vConfig];
+    _configs = [kConfig, vConfig];
 
     GNPagesAction().registerAction(PageName.detail, FuncName.clickStock, widget,
         (name, funcName, {data}) {

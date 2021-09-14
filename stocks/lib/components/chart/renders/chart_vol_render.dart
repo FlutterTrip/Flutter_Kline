@@ -2,27 +2,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:stocks/components/chart/chart_models.dart';
 
-class VolRender extends StatelessWidget {
-  final VolChartConfig config;
-  final List<HqChartData> datas;
-  final double maxValue;
-  final double minValue;
-  VolRender({Key? key, required this.config, required this.datas, required this.maxValue, required this.minValue})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      // isComplex: true,
-      // willChange: true,
-      painter: VolPainter(datas, config, maxValue, minValue),
-      child: Container(
-        height: config.height.toDouble(),
-      ),
-    );
-  }
-}
-
 class VolModel extends HqChartData {
   int index = 0;
   double maxValue = 0;
@@ -57,13 +36,13 @@ class VolModel extends HqChartData {
   }
 
   Size get size {
-    double width = config.elementNowWidth.toDouble();
+    double width = config.nowWidth.toDouble();
     double height = convertH(double.parse(cjl));
     return Size(width, height);
   }
 
   Point get point {
-    num x = index * config.elementNowWidth;
+    num x = index * config.nowWidth;
     num y = convertY(double.parse(cjl));
     return Point(x, y);
   }
@@ -71,18 +50,30 @@ class VolModel extends HqChartData {
 
 class VolPainter extends CustomPainter {
   late VolChartConfig config;
-  List<HqChartData> datas = [];
   List<VolModel> _paintModels = [];
 
-  VolPainter(List<HqChartData> _datas, VolChartConfig _config, double _maxValue,
-      double _minValue) {
+  VolPainter(List<HqChartData> _datas, VolChartConfig _config) {
     config = _config;
     if (_datas.length > 0) {
+      List<double> nums = [];
+      _datas.forEach((element) {
+        nums.add(double.parse(element.cjl));
+      });
+
+      double maxValue = nums.reduce(max);
+      double minValue = nums.reduce(min);
+
+      double pt = (config.paddingTop / config.height) * (maxValue - minValue);
+      double pb =
+          (config.paddingBottom / config.height) * (maxValue - minValue);
+      maxValue += pt;
+      minValue -= pb;
+
       int index = 0;
       _datas.forEach((element) {
         VolModel m = VolModel(element, _config);
-        m.maxValue = _maxValue;
-        m.minValue = _minValue;
+        m.maxValue = maxValue;
+        m.minValue = minValue;
         m.index = index;
         _paintModels.add(m);
         index++;
