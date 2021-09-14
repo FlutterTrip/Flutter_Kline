@@ -1,9 +1,7 @@
 import 'dart:math';
-import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:stocks/components/chart/chart_models.dart';
 
-final d = (String s) => Decimal.parse(s);
 class PaintModel extends HqChartData {
   int index = 0;
   double maxValue = 0;

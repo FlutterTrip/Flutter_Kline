@@ -30,7 +30,7 @@ class _FListViewState extends State<FListView> {
     m2.token1 = Token("USDT", "USDT");
     setState(() {
       datas = [m, m2];
-      // _subscriptionData();
+      _subscriptionData();
     });
 
     super.initState();
