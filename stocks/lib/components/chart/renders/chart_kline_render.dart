@@ -183,7 +183,8 @@ class CandlePainter extends CustomPainter {
           " ${maxPrice.toString()} ",
           Offset(element.linePoint.x.toDouble() + lineOffset,
               element.linePoint.y.toDouble() - 6),
-          isFromLeftDraw: lineOffset < 0, textStyle: textStyle);
+          isFromLeftDraw: lineOffset < 0,
+          textStyle: textStyle);
     }
     double minPrice = double.parse(element.minPrice);
     // 画最低价标志
@@ -197,14 +198,15 @@ class CandlePainter extends CustomPainter {
 
       TextStyle textStyle = TextStyle(
           color: Colors.white, backgroundColor: paint.color, fontSize: 10);
-        
+
       ChartTools.drawText(
           canvas,
           paint,
           " ${minPrice.toString()} ",
           Offset(element.linePoint.x.toDouble() + lineOffset,
               element.linePoint.y.toDouble() + element.lineHeight - 6),
-          isFromLeftDraw: lineOffset < 0, textStyle: textStyle);
+          isFromLeftDraw: lineOffset < 0,
+          textStyle: textStyle);
     }
   }
 
@@ -251,18 +253,16 @@ class CandlePainter extends CustomPainter {
       if (!element.isEmpty) {
         Point p = element.point;
         Size s = element.size;
-        // print(
-        // "$p|$s|${element.kpj}:${element.spj} || ${element.convertH(double.parse(element.kpj) - double.parse(element.spj))}");
-        Rect r =
-            Rect.fromLTWH(p.x.toDouble(), p.y.toDouble(), s.width, s.height);
-        // print(DateTime.fromMillisecondsSinceEpoch(element.time));
-        canvas.drawRect(r, paint..color = element.color);
-        canvas.drawLine(
-            Offset(
-                element.linePoint.x.toDouble(), element.linePoint.y.toDouble()),
-            Offset(element.linePoint.x.toDouble(),
-                element.linePoint.y.toDouble() + element.lineHeight),
-            paint);
+        ChartTools.drawRect(canvas, paint..color = element.color,
+            Offset(p.x.toDouble(), p.y.toDouble()), s.width, s.height);
+        ChartTools.drawLine(
+          canvas,
+          paint,
+          Offset(
+              element.linePoint.x.toDouble(), element.linePoint.y.toDouble()),
+          Offset(element.linePoint.x.toDouble(),
+              element.linePoint.y.toDouble() + element.lineHeight),
+        );
 
         paintMaxAndMinLabel(canvas, size, paint, element);
       }

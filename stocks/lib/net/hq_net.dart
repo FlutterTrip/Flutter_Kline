@@ -17,7 +17,7 @@ class HqNet {
     return Net.get("$baseUrl$klineUrl",queryParameters: {
       "symbol": piar.symbol.toUpperCase(),
       "interval": "1d",
-      "limit": "100"
+      // "limit": "00"
     }).then((value) {
       List obj = value.data;
       List<HqChartData> r = [];

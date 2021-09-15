@@ -16,7 +16,7 @@ class HqChartData extends HQData {
 // 基础元素绘制属性
 class ChartLineBaseConfig {
   double lineWidth = 0.5;
-  Color lineColor = Colors.grey.withAlpha(100);
+  Color lineColor = Colors.grey.withAlpha(80);
 }
 
 class ChartFontBaseConfig {
