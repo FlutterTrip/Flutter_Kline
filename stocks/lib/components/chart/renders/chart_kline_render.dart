@@ -175,14 +175,15 @@ class CandlePainter extends CustomPainter {
           Offset(element.linePoint.x.toDouble() + lineOffset,
               element.linePoint.y.toDouble()),
           paint);
-
+      TextStyle textStyle = TextStyle(
+          color: Colors.white, backgroundColor: paint.color, fontSize: 10);
       ChartTools.drawText(
           canvas,
           paint,
-          maxPrice.toString(),
+          " ${maxPrice.toString()} ",
           Offset(element.linePoint.x.toDouble() + lineOffset,
               element.linePoint.y.toDouble() - 6),
-          isFromLeftDraw: lineOffset < 0);
+          isFromLeftDraw: lineOffset < 0, textStyle: textStyle);
     }
     double minPrice = double.parse(element.minPrice);
     // 画最低价标志
@@ -194,13 +195,16 @@ class CandlePainter extends CustomPainter {
               element.linePoint.y.toDouble() + element.lineHeight),
           paint);
 
+      TextStyle textStyle = TextStyle(
+          color: Colors.white, backgroundColor: paint.color, fontSize: 10);
+        
       ChartTools.drawText(
           canvas,
           paint,
-          minPrice.toString(),
+          " ${minPrice.toString()} ",
           Offset(element.linePoint.x.toDouble() + lineOffset,
               element.linePoint.y.toDouble() + element.lineHeight - 6),
-          isFromLeftDraw: lineOffset < 0);
+          isFromLeftDraw: lineOffset < 0, textStyle: textStyle);
     }
   }
 
