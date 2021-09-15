@@ -34,11 +34,9 @@ class ChartTools {
 
   static drawDash(Canvas canvas, Paint paint, double length, Offset from,
       {int dashWidth = 5, int dashSpace = 5}) {
-    var max = length; // size获取到宽度
-
+    double max = length;
     double startX = from.dx;
     final space = (dashSpace + dashWidth);
-
     while (startX < max) {
       canvas.drawLine(
           Offset(startX, from.dy), Offset(startX + dashWidth, from.dy), paint);

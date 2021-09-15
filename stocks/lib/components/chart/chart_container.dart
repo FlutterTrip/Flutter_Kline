@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:stocks/components/chart/chart_models.dart';
 import 'package:stocks/components/chart/renders/chart_kline_render.dart';
 import 'package:stocks/components/chart/renders/chart_vol_render.dart';
@@ -38,7 +39,7 @@ class _ChartContainerState extends State<ChartContainer> {
         if (paddingNum == 0) {
           paddingNum = 1;
         }
-        List<HqChartData> paddingData = List.generate(paddingNum, (index){
+        List<HqChartData> paddingData = List.generate(paddingNum, (index) {
           HqChartData m = HqChartData();
           m.isEmpty = true;
           return m;
@@ -47,11 +48,10 @@ class _ChartContainerState extends State<ChartContainer> {
         setState(() {
           _scrollContentWidth = _datas.length * config.nowWidth * 1.0;
         });
-
       }
       scrollControllerListener();
     }
-   
+
     super.didUpdateWidget(oldWidget);
   }
 
@@ -64,10 +64,9 @@ class _ChartContainerState extends State<ChartContainer> {
   scrollControllerListener() {
     int offset = _scrollController.offset.toInt();
     if (offset >= 0 && _datas.length > 0 && widget.configs.length > 0) {
-
       Object config = widget.configs[0];
       Size? size = context.findRenderObject()?.paintBounds.size;
-     
+
       int elementW = 0;
       if (config is KlineChartConfig || config is VolChartConfig) {
         config as KlineChartConfig;
@@ -99,17 +98,29 @@ class _ChartContainerState extends State<ChartContainer> {
     if (_datas.length > 0) {
       switch (config.type) {
         case ChartType.Kline:
-        config as KlineChartConfig;
-          return CustomPaint(
-            child: Container(
-              height: config.height.toDouble(),
+          config as KlineChartConfig;
+          return
+              MouseRegion(
+            opaque: false,
+            onEnter: (event) {
+              print(event);
+            },
+            onHover: (event) {
+              print(event);
+            },
+            child: CustomPaint(
+              child: Container(
+                height: config.height.toDouble(),
+              ),
+              painter: CandlePainter(_nowDisplayData, config, _lastHqData),
             ),
-            painter: CandlePainter(_nowDisplayData, config, _lastHqData),
           );
+
         case ChartType.Vol:
           config as VolChartConfig;
           return CustomPaint(
             child: Container(
+              color: Colors.transparent,
               height: config.height.toDouble(),
             ),
             painter: VolPainter(_nowDisplayData, config),
@@ -122,15 +133,40 @@ class _ChartContainerState extends State<ChartContainer> {
   }
 
   @override
+  void handleEvent(PointerEvent event) {}
+
+  @override
   Widget build(BuildContext context) {
     List<Widget> renderView = [];
     widget.configs.forEach((config) => renderView.add(getReanderView(config)));
 
-    return Stack(
+    return
+        // MouseRegion(
+        //     onEnter: (event) {
+        //       print(event);
+        //     },
+        //     onHover: (event) {
+        //       print(event);
+        //     },
+        //     child: Stack(
+        //       children: [
+        //         Column(
+        //           crossAxisAlignment: CrossAxisAlignment.start,
+        //           mainAxisAlignment: MainAxisAlignment.start,
+        //           children: renderView,
+        //         ),
+        //         Positioned.fill(
+        //             child: SingleChildScrollView(
+        //                 reverse: true,
+        //                 scrollDirection: Axis.horizontal,
+        //                 controller: _scrollController,
+        //                 child: Container(
+        //                   width: _scrollContentWidth,
+        //                 )))
+        //       ],
+        //     ));
+        Stack(
       children: [
-        Column(
-          children: renderView,
-        ),
         Positioned.fill(
             child: SingleChildScrollView(
                 reverse: true,
@@ -138,7 +174,12 @@ class _ChartContainerState extends State<ChartContainer> {
                 controller: _scrollController,
                 child: Container(
                   width: _scrollContentWidth,
-                )))
+                ))),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: renderView,
+        ),
       ],
     );
   }
