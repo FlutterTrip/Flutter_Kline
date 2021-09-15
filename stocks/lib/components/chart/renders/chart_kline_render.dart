@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:stocks/components/chart/chart_models.dart';
+import 'package:stocks/components/chart/chart_tools.dart';
 
 class PaintModel extends HqChartData {
   int index = 0;
@@ -22,6 +23,7 @@ class PaintModel extends HqChartData {
     minPrice = data.minPrice;
     cjl = data.cjl;
     cje = data.cje;
+    isEmpty = data.isEmpty;
   }
 
   Color get color {
@@ -29,12 +31,11 @@ class PaintModel extends HqChartData {
   }
 
   convertY(double source) {
-    return config.height -
-        ((source - minValue) / (maxValue - minValue)) * config.height;
+    return ChartTools.convertY(source, config.height * 1.0, maxValue, minValue);
   }
 
   convertH(double source) {
-    return (source / (maxValue - minValue)) * config.height;
+    return ChartTools.convertH(source, config.height * 1.0, maxValue, minValue);
   }
 
   Size get size {
@@ -63,15 +64,19 @@ class PaintModel extends HqChartData {
 class CandlePainter extends CustomPainter {
   late KlineChartConfig config;
   List<PaintModel> _paintModels = [];
+  HqChartData? _lastHqChartData;
 
-  CandlePainter(List<HqChartData> _datas, KlineChartConfig _config) {
+  CandlePainter(List<HqChartData> _datas, KlineChartConfig _config,
+      HqChartData? _lastData) {
+    _lastHqChartData = _lastData;
     config = _config;
     if (_datas.length > 0) {
-     
       List<double> nums = [];
       _datas.forEach((element) {
-        nums.add(double.parse(element.maxPrice));
-        nums.add(double.parse(element.minPrice));
+        if (!element.isEmpty) {
+          nums.add(double.parse(element.maxPrice));
+          nums.add(double.parse(element.minPrice));
+        }
       });
 
       double maxValue = nums.reduce(max);
@@ -100,7 +105,6 @@ class CandlePainter extends CustomPainter {
   }
 
   int getDecimalDigits(String s) {
-    
     List a = double.parse(s).toString().split(".");
     if (a.length > 1) {
       String x = a[1];
@@ -109,9 +113,8 @@ class CandlePainter extends CustomPainter {
     return 0;
   }
 
-  grid(Canvas canvas, Size size) {
+  grid(Canvas canvas, Size size, Paint paint) {
     if (config.gridConfig != null) {
-      Paint paint = Paint();
       GridConfig gridConfig = config.gridConfig!;
       paint.strokeWidth = gridConfig.lineWidth;
       paint.color = gridConfig.lineColor;
@@ -156,85 +159,112 @@ class CandlePainter extends CustomPainter {
     }
   }
 
-  @override
-  paint(Canvas canvas, Size size) {
-    grid(canvas, size);
-    Paint paint = Paint();
-    paint.strokeWidth = 1;
-    _paintModels.forEach((element) {
-      Point p = element.point;
-      Size s = element.size;
-      // print(
-      // "$p|$s|${element.kpj}:${element.spj} || ${element.convertH(double.parse(element.kpj) - double.parse(element.spj))}");
-      Rect r = Rect.fromLTWH(p.x.toDouble(), p.y.toDouble(), s.width, s.height);
-      // print(DateTime.fromMillisecondsSinceEpoch(element.time));
-      canvas.drawRect(r, paint..color = element.color);
+// 最大最小值标签
+  paintMaxAndMinLabel(
+      Canvas canvas, Size size, Paint paint, PaintModel element) {
+    int lineOffset = 10;
+    if (element.index > _paintModels.length / 2) {
+      lineOffset = -10;
+    }
+    // 最高价标志
+    double maxPrice = double.parse(element.maxPrice);
+    if (maxPrice >= element.sourceMaxValue) {
       canvas.drawLine(
           Offset(
               element.linePoint.x.toDouble(), element.linePoint.y.toDouble()),
+          Offset(element.linePoint.x.toDouble() + lineOffset,
+              element.linePoint.y.toDouble()),
+          paint);
+
+      ChartTools.drawText(
+          canvas,
+          paint,
+          maxPrice.toString(),
+          Offset(element.linePoint.x.toDouble() + lineOffset,
+              element.linePoint.y.toDouble() - 6),
+          isFromLeftDraw: lineOffset < 0);
+    }
+    double minPrice = double.parse(element.minPrice);
+    // 画最低价标志
+    if (minPrice <= element.sourceMinValue) {
+      canvas.drawLine(
           Offset(element.linePoint.x.toDouble(),
               element.linePoint.y.toDouble() + element.lineHeight),
+          Offset(element.linePoint.x.toDouble() + lineOffset,
+              element.linePoint.y.toDouble() + element.lineHeight),
           paint);
-      int lineOffset = 10;
-      if (element.index > _paintModels.length / 2) {
-        lineOffset = -10;
+
+      ChartTools.drawText(
+          canvas,
+          paint,
+          minPrice.toString(),
+          Offset(element.linePoint.x.toDouble() + lineOffset,
+              element.linePoint.y.toDouble() + element.lineHeight - 6),
+          isFromLeftDraw: lineOffset < 0);
+    }
+  }
+
+  paintNowPrice(Canvas canvas, Size size, Paint paint) {
+    if (_lastHqChartData != null) {
+      PaintModel m = _paintModels[0];
+      double nowPriceY = m.convertY(double.parse(_lastHqChartData!.spj));
+
+      if (nowPriceY <= 0) {
+        nowPriceY = 6;
       }
-      // 最高价标志
-      double maxPrice = double.parse(element.maxPrice);
-      if (maxPrice >= element.sourceMaxValue) {
+
+      if (nowPriceY >= size.height) {
+        nowPriceY = size.height - 6;
+      }
+
+      paint.color = Colors.yellow;
+      // print(nowPriceY);
+      ChartTools.drawDash(canvas, paint, size.width, Offset(0, nowPriceY));
+      TextStyle textStyle = TextStyle(
+          color: Colors.white, backgroundColor: paint.color, fontSize: 10);
+      ChartTools.drawText(
+          canvas,
+          paint,
+          " ${double.parse(_lastHqChartData!.spj)} ",
+          Offset(size.width - 8, nowPriceY - 6),
+          textStyle: textStyle,
+          isFromLeftDraw: true);
+      // paint.
+      // canvas.drawLine(Offset(0, nowPriceY), Offset(size.width, nowPriceY),
+      //     paint..color = Colors.yellow);
+    }
+
+    // paint
+  }
+
+  @override
+  paint(Canvas canvas, Size size) {
+    Paint paint = Paint();
+    grid(canvas, size, paint);
+    paint.strokeWidth = 1;
+
+    _paintModels.forEach((element) {
+      if (!element.isEmpty) {
+        Point p = element.point;
+        Size s = element.size;
+        // print(
+        // "$p|$s|${element.kpj}:${element.spj} || ${element.convertH(double.parse(element.kpj) - double.parse(element.spj))}");
+        Rect r =
+            Rect.fromLTWH(p.x.toDouble(), p.y.toDouble(), s.width, s.height);
+        // print(DateTime.fromMillisecondsSinceEpoch(element.time));
+        canvas.drawRect(r, paint..color = element.color);
         canvas.drawLine(
             Offset(
                 element.linePoint.x.toDouble(), element.linePoint.y.toDouble()),
-            Offset(element.linePoint.x.toDouble() + lineOffset,
-                element.linePoint.y.toDouble()),
-            paint);
-
-        String text = maxPrice.toString();
-        TextSpan span = TextSpan(
-            text: text, style: TextStyle(color: paint.color, fontSize: 10));
-        TextPainter tp = TextPainter(
-            text: span,
-            textAlign: TextAlign.left,
-            textDirection: TextDirection.rtl);
-        tp.layout();
-        int textOffset = 0;
-        if (lineOffset < 0) {
-          textOffset =  tp.size.width.toInt();
-        }
-        tp.paint(
-            canvas,
-            Offset(element.linePoint.x.toDouble() + lineOffset - textOffset,
-                element.linePoint.y.toDouble() - 6));
-      }
-      double minPrice = double.parse(element.minPrice);
-      // 画最低价标志
-      if (minPrice <= element.sourceMinValue) {
-        canvas.drawLine(
             Offset(element.linePoint.x.toDouble(),
                 element.linePoint.y.toDouble() + element.lineHeight),
-            Offset(element.linePoint.x.toDouble() + lineOffset,
-                element.linePoint.y.toDouble() + element.lineHeight),
             paint);
 
-        String text = minPrice.toString();
-        TextSpan span = TextSpan(
-            text: text, style: TextStyle(color: paint.color, fontSize: 10));
-        TextPainter tp = TextPainter(
-            text: span,
-            textAlign: TextAlign.left,
-            textDirection: TextDirection.ltr);
-        tp.layout();
-        int textOffset = 0;
-        if (lineOffset < 0) {
-          textOffset = tp.size.width.toInt();
-        }
-        tp.paint(
-            canvas,
-            Offset(element.linePoint.x.toDouble() + lineOffset - textOffset,
-                element.linePoint.y.toDouble() + element.lineHeight - 6));
+        paintMaxAndMinLabel(canvas, size, paint, element);
       }
     });
 
+    paintNowPrice(canvas, size, paint);
   }
 
   @override

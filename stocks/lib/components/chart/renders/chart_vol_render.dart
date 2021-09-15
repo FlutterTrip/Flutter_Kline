@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:stocks/components/chart/chart_models.dart';
+import 'package:stocks/components/chart/chart_tools.dart';
 
 class VolModel extends HqChartData {
   int index = 0;
@@ -20,6 +21,7 @@ class VolModel extends HqChartData {
     minPrice = data.minPrice;
     cjl = data.cjl;
     cje = data.cje;
+    isEmpty = data.isEmpty;
   }
 
   Color get color {
@@ -27,17 +29,16 @@ class VolModel extends HqChartData {
   }
 
   convertY(double source) {
-    return config.height -
-        ((source - minValue) / (maxValue - minValue)) * config.height;
+    return ChartTools.convertY(source, config.height * 1.0, maxValue, minValue);
   }
 
   convertH(double source) {
-    return ((source - minValue) / (maxValue - minValue)) * config.height;
+    return ChartTools.convertH(source, config.height * 1.0, maxValue, minValue);
   }
 
   Size get size {
     double width = config.nowWidth.toDouble();
-    double height = convertH(double.parse(cjl));
+    double height = convertH(double.parse(cjl) - minValue);
     return Size(width, height);
   }
 
@@ -57,7 +58,9 @@ class VolPainter extends CustomPainter {
     if (_datas.length > 0) {
       List<double> nums = [];
       _datas.forEach((element) {
-        nums.add(double.parse(element.cjl));
+        if (!element.isEmpty) {
+          nums.add(double.parse(element.cjl));
+        }
       });
 
       double maxValue = nums.reduce(max);
@@ -86,13 +89,16 @@ class VolPainter extends CustomPainter {
     Paint paint = Paint();
     paint.strokeWidth = 1;
     _paintModels.forEach((element) {
-      Point p = element.point;
-      Size s = element.size;
-      // print(
-      // "$p|$s|${element.kpj}:${element.spj} || ${element.convertH(double.parse(element.kpj) - double.parse(element.spj))}");
-      Rect r = Rect.fromLTWH(p.x.toDouble() + 1, p.y.toDouble(), s.width - 1, s.height);
-      // print(DateTime.fromMillisecondsSinceEpoch(element.time));
-      canvas.drawRect(r, paint..color = element.color);
+      if (!element.isEmpty) {
+        Point p = element.point;
+        Size s = element.size;
+        // print(
+        // "$p|$s|${element.kpj}:${element.spj} || ${element.convertH(double.parse(element.kpj) - double.parse(element.spj))}");
+        Rect r = Rect.fromLTWH(
+            p.x.toDouble() + 1, p.y.toDouble(), s.width - 1, s.height);
+        // print(DateTime.fromMillisecondsSinceEpoch(element.time));
+        canvas.drawRect(r, paint..color = element.color);
+      }
     });
   }
 

@@ -16,7 +16,8 @@ class ChartContainer extends StatefulWidget {
 class _ChartContainerState extends State<ChartContainer> {
   double _scrollContentWidth = 500;
   List<HqChartData> _nowDisplayData = [];
-
+  List<HqChartData> _datas = [];
+  HqChartData? _lastHqData;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -28,12 +29,25 @@ class _ChartContainerState extends State<ChartContainer> {
   @override
   void didUpdateWidget(ChartContainer oldWidget) {
     if (widget.configs.length > 0 && widget.datas.length > 0) {
+      _lastHqData = widget.datas[widget.datas.length - 1];
       Object config = widget.configs[0];
       if (config is KlineChartConfig || config is VolChartConfig) {
         config as KlineChartConfig;
-        setState(() {
-          _scrollContentWidth = widget.datas.length * config.nowWidth * 1.0;
+        int elementW = config.nowWidth;
+        int paddingNum = config.paddingRight ~/ elementW;
+        if (paddingNum == 0) {
+          paddingNum = 1;
+        }
+        List<HqChartData> paddingData = List.generate(paddingNum, (index){
+          HqChartData m = HqChartData();
+          m.isEmpty = true;
+          return m;
         });
+        _datas = [...widget.datas, ...paddingData];
+        setState(() {
+          _scrollContentWidth = _datas.length * config.nowWidth * 1.0;
+        });
+
       }
       scrollControllerListener();
     }
@@ -49,7 +63,8 @@ class _ChartContainerState extends State<ChartContainer> {
 
   scrollControllerListener() {
     int offset = _scrollController.offset.toInt();
-    if (offset >= 0 && widget.datas.length > 0 && widget.configs.length > 0) {
+    if (offset >= 0 && _datas.length > 0 && widget.configs.length > 0) {
+
       Object config = widget.configs[0];
       Size? size = context.findRenderObject()?.paintBounds.size;
      
@@ -62,18 +77,17 @@ class _ChartContainerState extends State<ChartContainer> {
       config as ChartBaseConfig;
 
       int width = size == null ? config.width : size.width.toInt();
-
       int oneScreenNum = width ~/ elementW;
       int rightNum = offset ~/ elementW;
       int fromNum = rightNum + oneScreenNum;
-      if (fromNum > widget.datas.length) {
+      if (fromNum > _datas.length) {
         // 一个屏幕显示的数量超出总共的数量
-        fromNum = widget.datas.length;
+        fromNum = _datas.length;
       }
-      int to = widget.datas.length - rightNum;
-      if (fromNum <= widget.datas.length) {
+      int to = _datas.length - rightNum;
+      if (fromNum <= _datas.length) {
         List<HqChartData> nowDisplay = [];
-        nowDisplay = widget.datas.sublist(widget.datas.length - fromNum, to);
+        nowDisplay = _datas.sublist(_datas.length - fromNum, to);
         setState(() {
           _nowDisplayData = nowDisplay;
         });
@@ -82,21 +96,23 @@ class _ChartContainerState extends State<ChartContainer> {
   }
 
   Widget getReanderView(ChartBaseConfig config) {
-    if (widget.datas.length > 0) {
+    if (_datas.length > 0) {
       switch (config.type) {
         case ChartType.Kline:
+        config as KlineChartConfig;
           return CustomPaint(
             child: Container(
               height: config.height.toDouble(),
             ),
-            painter: CandlePainter(_nowDisplayData, config as KlineChartConfig),
+            painter: CandlePainter(_nowDisplayData, config, _lastHqData),
           );
         case ChartType.Vol:
+          config as VolChartConfig;
           return CustomPaint(
             child: Container(
               height: config.height.toDouble(),
             ),
-            painter: VolPainter(_nowDisplayData, config as VolChartConfig),
+            painter: VolPainter(_nowDisplayData, config),
           );
         default:
           return Container();

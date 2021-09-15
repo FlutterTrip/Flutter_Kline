@@ -9,7 +9,9 @@ enum ChartType {
 }
 enum ChartIndexType { MA }
 
-class HqChartData extends HQData {}
+class HqChartData extends HQData {
+  bool isEmpty = false; // 是否为空模型，为 true 时候，为填充作用
+}
 
 // 基础元素绘制属性
 class ChartLineBaseConfig {
@@ -55,6 +57,7 @@ class ChartBaseConfig {
   bool isAutoWidth = false;
   int paddingTop = 8;
   int paddingBottom = 8;
+  int paddingRight = 100;
   Color buy = GNTheme().getZDColor(ZDColorType.up);
   Color sell = GNTheme().getZDColor(ZDColorType.down);
 
@@ -63,29 +66,15 @@ class ChartBaseConfig {
 
 }
 
-// class GridChartConfig extends ChartBaseConfig {
-//   int row = 3;
-//   int column = 3;
-//   double lineWidth = 0.5;
-//   Color color = Colors.grey.withAlpha(100);
-//   ChartType type = ChartType.Grid;
-// }
-
 //  单独主图属性配置
 
 // kline
 class KlineChartConfig extends ChartBaseConfig with ChartElementBaseConfig {
-  // int candleMinWidth = 10;
-  // int candleMaxWidth = 20;
-  // int candleNowWidth = 10;
   ChartType type = ChartType.Kline;
 }
 
 // vol
 class VolChartConfig extends ChartBaseConfig with ChartElementBaseConfig {
-  // int elementMinWidth = 10;
-  // int elementMaxWidth = 20;
-  // int elementNowWidth = 10;
   int height = 100;
   ChartType type = ChartType.Vol;
 }
