@@ -99,21 +99,11 @@ class _ChartContainerState extends State<ChartContainer> {
       switch (config.type) {
         case ChartType.Kline:
           config as KlineChartConfig;
-          return
-              MouseRegion(
-            opaque: false,
-            onEnter: (event) {
-              print(event);
-            },
-            onHover: (event) {
-              print(event);
-            },
-            child: CustomPaint(
-              child: Container(
-                height: config.height.toDouble(),
-              ),
-              painter: CandlePainter(_nowDisplayData, config, _lastHqData),
+          return CustomPaint(
+            child: Container(
+              height: config.height.toDouble(),
             ),
+            painter: CandlePainter(_nowDisplayData, config, _lastHqData),
           );
 
         case ChartType.Vol:
@@ -125,6 +115,7 @@ class _ChartContainerState extends State<ChartContainer> {
             ),
             painter: VolPainter(_nowDisplayData, config),
           );
+
         default:
           return Container();
       }
@@ -133,54 +124,33 @@ class _ChartContainerState extends State<ChartContainer> {
   }
 
   @override
-  void handleEvent(PointerEvent event) {}
-
-  @override
   Widget build(BuildContext context) {
     List<Widget> renderView = [];
     widget.configs.forEach((config) => renderView.add(getReanderView(config)));
 
-    return
-        // MouseRegion(
-        //     onEnter: (event) {
-        //       print(event);
-        //     },
-        //     onHover: (event) {
-        //       print(event);
-        //     },
-        //     child: Stack(
-        //       children: [
-        //         Column(
-        //           crossAxisAlignment: CrossAxisAlignment.start,
-        //           mainAxisAlignment: MainAxisAlignment.start,
-        //           children: renderView,
-        //         ),
-        //         Positioned.fill(
-        //             child: SingleChildScrollView(
-        //                 reverse: true,
-        //                 scrollDirection: Axis.horizontal,
-        //                 controller: _scrollController,
-        //                 child: Container(
-        //                   width: _scrollContentWidth,
-        //                 )))
-        //       ],
-        //     ));
-        Stack(
-      children: [
-        Positioned.fill(
-            child: SingleChildScrollView(
-                reverse: true,
-                scrollDirection: Axis.horizontal,
-                controller: _scrollController,
-                child: Container(
-                  width: _scrollContentWidth,
-                ))),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: renderView,
-        ),
-      ],
-    );
+    return MouseRegion(
+        onEnter: (event) {
+          print(event);
+        },
+        onHover: (event) {
+          print(event);
+        },
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: renderView,
+            ),
+            Positioned.fill(
+                child: SingleChildScrollView(
+                    reverse: true,
+                    scrollDirection: Axis.horizontal,
+                    controller: _scrollController,
+                    child: Container(
+                      width: _scrollContentWidth,
+                    )))
+          ],
+        ));
   }
 }
