@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:stocks/components/chart/chart_models.dart';
 import 'package:stocks/components/chart/chart_tools.dart';
+import 'package:stocks/components/chart/renders/chart_render_tools.dart';
 
 class PaintModel extends HqChartData {
   int index = 0;
@@ -65,10 +66,12 @@ class CandlePainter extends CustomPainter {
   late KlineChartConfig config;
   List<PaintModel> _paintModels = [];
   HqChartData? _lastHqChartData;
+  Offset? _nowPoint;
 
   CandlePainter(List<HqChartData> _datas, KlineChartConfig _config,
-      HqChartData? _lastData) {
+      HqChartData? _lastData, Offset? _nowP) {
     _lastHqChartData = _lastData;
+    _nowPoint = _nowP;
     config = _config;
     if (_datas.length > 0) {
       List<double> nums = [];
@@ -177,7 +180,7 @@ class CandlePainter extends CustomPainter {
           paint);
       TextStyle textStyle = TextStyle(
           color: Colors.white, backgroundColor: paint.color, fontSize: 10);
-      ChartTools.drawText(
+      ChartRenderTools.drawText(
           canvas,
           paint,
           " ${maxPrice.toString()} ",
@@ -199,7 +202,7 @@ class CandlePainter extends CustomPainter {
       TextStyle textStyle = TextStyle(
           color: Colors.white, backgroundColor: paint.color, fontSize: 10);
 
-      ChartTools.drawText(
+      ChartRenderTools.drawText(
           canvas,
           paint,
           " ${minPrice.toString()} ",
@@ -210,6 +213,7 @@ class CandlePainter extends CustomPainter {
     }
   }
 
+  // 最后价格线
   paintNowPrice(Canvas canvas, Size size, Paint paint) {
     if (_lastHqChartData != null) {
       PaintModel m = _paintModels[0];
@@ -225,10 +229,12 @@ class CandlePainter extends CustomPainter {
 
       paint.color = Colors.yellow;
       // print(nowPriceY);
-      ChartTools.drawDash(canvas, paint, size.width, Offset(0, nowPriceY));
+      // ChartRenderTools.drawDash(canvas, paint, size.width, Offset(0, nowPriceY));
+      ChartRenderTools.drawDash(
+          canvas, paint, Offset(0, nowPriceY), Offset(size.width, nowPriceY));
       TextStyle textStyle = TextStyle(
           color: Colors.white, backgroundColor: paint.color, fontSize: 10);
-      ChartTools.drawText(
+      ChartRenderTools.drawText(
           canvas,
           paint,
           " ${double.parse(_lastHqChartData!.spj)} ",
@@ -243,19 +249,80 @@ class CandlePainter extends CustomPainter {
     // paint
   }
 
+  paintAlert(Canvas canvas, Size size, Paint paint, PaintModel model) {
+    if (_nowPoint != null) {
+      Offset nowP = _nowPoint!;
+      double space = 8;
+      Size rectSize = Size(145 + space, 64 + space);
+      Offset point = Offset(
+          nowP.dx >= size.width - rectSize.width
+              ? nowP.dx - rectSize.width - space
+              : nowP.dx,
+          nowP.dy >= size.height - rectSize.height
+              ? nowP.dy - rectSize.height - space
+              : nowP.dy);
+      Rect rect = Rect.fromLTWH(point.dx + space, point.dy + space,
+          rectSize.width - space, rectSize.height - space);
+      RRect outer = RRect.fromRectAndRadius(rect, Radius.circular(8.0));
+      paint.color = Colors.white.withAlpha(200);
+      canvas.drawRRect(outer, paint);
+
+      List<String> titles = [
+        'max: ',
+        'min: ',
+        'opening price: ',
+        'closing price: '
+      ];
+      List<String> values = [
+        "${double.parse(model.maxPrice)}",
+        "${double.parse(model.minPrice)}",
+        "${double.parse(model.kpj)}",
+        "${double.parse(model.spj)}",
+      ];
+      Offset s = Offset(point.dx + space * 2, point.dy + space * 2);
+      int index = 0;
+      titles.forEach((element) {
+        paint.color = config.gridConfig!.fontColor;
+        int width = ChartRenderTools.drawText(canvas, paint, element, s);
+        s = Offset(s.dx + width, s.dy);
+        paint.color = Colors.black54;
+        ChartRenderTools.drawText(canvas, paint, values[index], s);
+        s = Offset(point.dx + space * 2, s.dy + 12);
+        index++;
+      });
+    }
+  }
+
   @override
   paint(Canvas canvas, Size size) {
     Paint paint = Paint();
+
     grid(canvas, size, paint);
     paint.strokeWidth = 1;
-
+    PaintModel? selPaintModel = null;
     _paintModels.forEach((element) {
       if (!element.isEmpty) {
         Point p = element.point;
         Size s = element.size;
-        ChartTools.drawRect(canvas, paint..color = element.color,
+        bool isSel = false;
+        if (_nowPoint != null) {
+          double px = _nowPoint!.dx;
+          if (px >= p.x && px <= p.x + s.width) {
+            isSel = true;
+            selPaintModel = element;
+          }
+        }
+        if (isSel) {
+          ChartRenderTools.drawRect(
+              canvas,
+              paint..color = element.color.withAlpha(20),
+              Offset(p.x.toDouble(), 0),
+              s.width,
+              size.height);
+        }
+        ChartRenderTools.drawRect(canvas, paint..color = element.color,
             Offset(p.x.toDouble(), p.y.toDouble()), s.width, s.height);
-        ChartTools.drawLine(
+        ChartRenderTools.drawLine(
           canvas,
           paint,
           Offset(
@@ -269,6 +336,14 @@ class CandlePainter extends CustomPainter {
     });
 
     paintNowPrice(canvas, size, paint);
+    if (_nowPoint != null) {
+      paint.color = config.gridConfig!.lineColor.withAlpha(255);
+      ChartRenderTools.drawCross(canvas, paint, size, _nowPoint!);
+    }
+
+    if (selPaintModel != null) {
+      paintAlert(canvas, size, paint, selPaintModel!);
+    }
   }
 
   @override

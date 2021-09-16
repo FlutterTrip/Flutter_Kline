@@ -19,6 +19,7 @@ class _ChartContainerState extends State<ChartContainer> {
   List<HqChartData> _nowDisplayData = [];
   List<HqChartData> _datas = [];
   HqChartData? _lastHqData;
+  Offset? _nowKlinePoint;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -103,7 +104,7 @@ class _ChartContainerState extends State<ChartContainer> {
             child: Container(
               height: config.height.toDouble(),
             ),
-            painter: CandlePainter(_nowDisplayData, config, _lastHqData),
+            painter: CandlePainter(_nowDisplayData, config, _lastHqData, _nowKlinePoint),
           );
 
         case ChartType.Vol:
@@ -130,10 +131,22 @@ class _ChartContainerState extends State<ChartContainer> {
 
     return MouseRegion(
         onEnter: (event) {
-          print(event);
+
+        },
+        onExit: (event) {
+          setState(() {
+            _nowKlinePoint = null;
+          });
         },
         onHover: (event) {
-          print(event);
+          if (event.localPosition > Offset(0, 0)) {
+            if (event.localPosition.dy <= 300) {
+              setState(() {
+                _nowKlinePoint = event.localPosition;
+              });
+            }
+          }
+          
         },
         child: Stack(
           children: [
