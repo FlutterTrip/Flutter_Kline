@@ -136,41 +136,45 @@ class _ChartContainerState extends State<ChartContainer> {
     widget.configs.forEach((config) => renderView.add(getReanderView(config)));
 
     return MouseRegion(
-          onExit: (event) {
-            setState(() {
-              _nowKlinePoint = null;
-            });
-          },
-          onHover: (event) {
-            if (event.localPosition >= Offset(0, 0)) {
-              if (event.localPosition.dy <= 300) {
-                setState(() {
-                  _nowKlinePoint = event.localPosition;
-                });
-              }
+        onExit: (event) {
+          setState(() {
+            _nowKlinePoint = null;
+          });
+        },
+        onHover: (event) {
+          if (event.localPosition >= Offset(0, 0)) {
+            if (event.localPosition.dy <= 300) {
+              setState(() {
+                _nowKlinePoint = event.localPosition;
+              });
+            } else {
+              setState(() {
+                _nowKlinePoint = null;
+              });
             }
+          }
+        },
+        child: GestureDetector(
+          onScaleUpdate: (event) {
+            print(event);
           },
-          child: GestureDetector(
-            onScaleUpdate: (event) {
-              print(event);
-            },
-            child: Stack(
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: renderView,
-                ),
-                Positioned.fill(
-                    child: SingleChildScrollView(
-                        reverse: true,
-                        scrollDirection: Axis.horizontal,
-                        controller: _scrollController,
-                        child: Container(
-                          width: _scrollContentWidth,
-                        )))
-              ],
-            ),)
-          );
+          child: Stack(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: renderView,
+              ),
+              Positioned.fill(
+                  child: SingleChildScrollView(
+                      reverse: true,
+                      scrollDirection: Axis.horizontal,
+                      controller: _scrollController,
+                      child: Container(
+                        width: _scrollContentWidth,
+                      )))
+            ],
+          ),
+        ));
   }
 }

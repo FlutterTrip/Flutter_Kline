@@ -78,9 +78,10 @@ class ChartRenderTools {
 
   static int drawText(Canvas canvas, Paint paint, String text, Offset from,
       {TextStyle? textStyle, bool isFromLeftDraw = false}) {
+    TextStyle ts = textStyle ?? TextStyle(color: paint.color, fontSize: 10);
     TextSpan span = TextSpan(
         text: text,
-        style: textStyle ?? TextStyle(color: paint.color, fontSize: 10));
+        style: ts);
     TextPainter tp = TextPainter(
         text: span,
         textAlign: TextAlign.left,
@@ -89,7 +90,6 @@ class ChartRenderTools {
     Offset from_ = from;
     int textOffset = tp.size.width.toInt();
     if (isFromLeftDraw) {
-      
       from_ = Offset(from_.dx - textOffset, from_.dy);
     }
     tp.paint(canvas, from_);
