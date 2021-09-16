@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:stocks/components/chart/chart_models.dart';
@@ -85,6 +86,10 @@ class _ChartContainerState extends State<ChartContainer> {
         fromNum = _datas.length;
       }
       int to = _datas.length - rightNum;
+      if (to < 0) {
+        _scrollController.jumpTo(_scrollContentWidth - width);
+        return;
+      }
       if (fromNum <= _datas.length) {
         List<HqChartData> nowDisplay = [];
         nowDisplay = _datas.sublist(_datas.length - fromNum, to);
@@ -104,7 +109,8 @@ class _ChartContainerState extends State<ChartContainer> {
             child: Container(
               height: config.height.toDouble(),
             ),
-            painter: CandlePainter(_nowDisplayData, config, _lastHqData, _nowKlinePoint),
+            painter: CandlePainter(
+                _nowDisplayData, config, _lastHqData, _nowKlinePoint),
           );
 
         case ChartType.Vol:
@@ -130,40 +136,41 @@ class _ChartContainerState extends State<ChartContainer> {
     widget.configs.forEach((config) => renderView.add(getReanderView(config)));
 
     return MouseRegion(
-        onEnter: (event) {
-
-        },
-        onExit: (event) {
-          setState(() {
-            _nowKlinePoint = null;
-          });
-        },
-        onHover: (event) {
-          if (event.localPosition > Offset(0, 0)) {
-            if (event.localPosition.dy <= 300) {
-              setState(() {
-                _nowKlinePoint = event.localPosition;
-              });
+          onExit: (event) {
+            setState(() {
+              _nowKlinePoint = null;
+            });
+          },
+          onHover: (event) {
+            if (event.localPosition >= Offset(0, 0)) {
+              if (event.localPosition.dy <= 300) {
+                setState(() {
+                  _nowKlinePoint = event.localPosition;
+                });
+              }
             }
-          }
-          
-        },
-        child: Stack(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: renderView,
-            ),
-            Positioned.fill(
-                child: SingleChildScrollView(
-                    reverse: true,
-                    scrollDirection: Axis.horizontal,
-                    controller: _scrollController,
-                    child: Container(
-                      width: _scrollContentWidth,
-                    )))
-          ],
-        ));
+          },
+          child: GestureDetector(
+            onScaleUpdate: (event) {
+              print(event);
+            },
+            child: Stack(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: renderView,
+                ),
+                Positioned.fill(
+                    child: SingleChildScrollView(
+                        reverse: true,
+                        scrollDirection: Axis.horizontal,
+                        controller: _scrollController,
+                        child: Container(
+                          width: _scrollContentWidth,
+                        )))
+              ],
+            ),)
+          );
   }
 }

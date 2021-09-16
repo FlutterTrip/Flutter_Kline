@@ -27,6 +27,11 @@ class PaintModel extends HqChartData {
     isEmpty = data.isEmpty;
   }
 
+  String get timeStr {
+    String s = DateTime.fromMillisecondsSinceEpoch(time).toString();
+    return s.split(".")[0];
+  }
+
   Color get color {
     return double.parse(spj) > double.parse(kpj) ? config.buy : config.sell;
   }
@@ -142,7 +147,7 @@ class CandlePainter extends CustomPainter {
           textOffset =
               Offset(0, rowH * gridConfig.row - gridConfig.fontSize - 4);
         } else {
-          num = space * i;
+          num = maxValue - space * i;
           textOffset = Offset(0, rowH * i - gridConfig.fontSize - 4);
         }
 
@@ -227,7 +232,7 @@ class CandlePainter extends CustomPainter {
         nowPriceY = size.height - 6;
       }
 
-      paint.color = Colors.yellow;
+      paint.color = Colors.pinkAccent;
       // print(nowPriceY);
       // ChartRenderTools.drawDash(canvas, paint, size.width, Offset(0, nowPriceY));
       ChartRenderTools.drawDash(
@@ -249,8 +254,8 @@ class CandlePainter extends CustomPainter {
     // paint
   }
 
-  paintAlert(Canvas canvas, Size size, Paint paint, PaintModel model) {
-    if (_nowPoint != null) {
+  paintAlert(Canvas canvas, Size size, Paint paint, PaintModel? model) {
+    if (_nowPoint != null && model != null) {
       Offset nowP = _nowPoint!;
       double space = 8;
       Size rectSize = Size(145 + space, 64 + space);
@@ -290,6 +295,33 @@ class CandlePainter extends CustomPainter {
         s = Offset(point.dx + space * 2, s.dy + 12);
         index++;
       });
+    }
+  }
+
+  paintCross(Canvas canvas, Size size, Paint paint, PaintModel? selPaintModel) {
+    if (_nowPoint != null) {
+      paint.color = config.gridConfig!.lineColor.withAlpha(255);
+
+      ChartRenderTools.drawCross(canvas, paint, size, _nowPoint!);
+      PaintModel m = _paintModels[0];
+      int digits = getDecimalDigits(m.spj);
+      double valueY = ChartTools.yConvert(
+          _nowPoint!.dy, size.height, m.maxValue, m.minValue);
+      String text = double.parse(valueY.toStringAsFixed(digits)).toString();
+      TextStyle textStyle = TextStyle(
+          color: Colors.white, backgroundColor: paint.color, fontSize: 10);
+      ChartRenderTools.drawText(
+          canvas, paint, " $text ", Offset(0, _nowPoint!.dy - 6),
+          textStyle: textStyle);
+      if (selPaintModel != null) {
+        bool isFromLeftDraw = false;
+        if (selPaintModel.index >= _paintModels.length / 2) {
+          isFromLeftDraw = true;
+        }
+        ChartRenderTools.drawText(canvas, paint, " ${selPaintModel.timeStr} ",
+            Offset(_nowPoint!.dx, size.height - 12),
+            textStyle: textStyle, isFromLeftDraw: isFromLeftDraw);
+      }
     }
   }
 
@@ -336,14 +368,8 @@ class CandlePainter extends CustomPainter {
     });
 
     paintNowPrice(canvas, size, paint);
-    if (_nowPoint != null) {
-      paint.color = config.gridConfig!.lineColor.withAlpha(255);
-      ChartRenderTools.drawCross(canvas, paint, size, _nowPoint!);
-    }
-
-    if (selPaintModel != null) {
-      paintAlert(canvas, size, paint, selPaintModel!);
-    }
+    paintCross(canvas, size, paint, selPaintModel);
+    paintAlert(canvas, size, paint, selPaintModel);
   }
 
   @override
