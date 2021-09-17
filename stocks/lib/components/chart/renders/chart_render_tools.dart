@@ -10,7 +10,7 @@ class ChartRenderTools {
     Size size,
     Offset point,
   ) {
-    drawDash(canvas, paint, Offset(0, point.dy), Offset(size.width, point.dy) );
+    drawDash(canvas, paint, Offset(0, point.dy), Offset(size.width, point.dy));
     drawDash(canvas, paint, Offset(point.dx, 0), Offset(point.dx, size.height));
   }
 
@@ -31,7 +31,9 @@ class ChartRenderTools {
   }
 
   static drawLine(Canvas canvas, Paint paint, Offset from, Offset to) {
-    canvas.drawLine(from, to, paint);
+    if (Point(from.dx, from.dy).distanceTo(Point(to.dx, to.dy)) > 1) {
+      canvas.drawLine(from, to, paint);
+    }
   }
 
   static drawDash_(Canvas canvas, Paint paint, double length, Offset from,
@@ -66,8 +68,7 @@ class ChartRenderTools {
     double nowLength = 0;
     while (nowLength < max) {
       // double distance = Point(startX, startY).distanceTo(Point(sw, sh)) - dashSpace;
-      canvas.drawLine(
-          Offset(startX, startY), Offset(endx, endy), paint);
+      drawLine(canvas, paint, Offset(startX, startY), Offset(endx, endy));
       startX += sw;
       startY += sh;
       endx += sw;
@@ -79,9 +80,7 @@ class ChartRenderTools {
   static int drawText(Canvas canvas, Paint paint, String text, Offset from,
       {TextStyle? textStyle, bool isFromLeftDraw = false}) {
     TextStyle ts = textStyle ?? TextStyle(color: paint.color, fontSize: 10);
-    TextSpan span = TextSpan(
-        text: text,
-        style: ts);
+    TextSpan span = TextSpan(text: text, style: ts);
     TextPainter tp = TextPainter(
         text: span,
         textAlign: TextAlign.left,
