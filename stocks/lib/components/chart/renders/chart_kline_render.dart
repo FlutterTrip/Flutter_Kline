@@ -327,6 +327,23 @@ class CandlePainter extends CustomPainter {
     }
   }
 
+  paintMa(Canvas canvas, Size size, Paint paint, List<Offset> points,
+      ChartMAIndexConfig config) {
+    paint.style = PaintingStyle.stroke;
+    Path path = Path();
+    bool isMove = false;
+    points.forEach((element) {
+      if (isMove) {
+        path.lineTo(element.dx, element.dy);
+      }
+      if (element.dx != 0 && !isMove) {
+        path.moveTo(element.dx, element.dy);
+        isMove = true;
+      }
+    });
+    canvas.drawPath(path, paint..color = config.lineColor);
+  }
+
   @override
   paint(Canvas canvas, Size size) {
     Paint paint = Paint();
@@ -334,10 +351,7 @@ class CandlePainter extends CustomPainter {
     grid(canvas, size, paint);
     paint.strokeWidth = 1;
     PaintModel? selPaintModel = null;
-    List<Path> maPaths = [];
-    config.maIndexTypes.forEach((element) {
-      maPaths.add(Path());
-    });
+    List<List<Offset>> maPoints = [];
     _paintModels.forEach((element) {
       if (!element.isEmpty) {
         Point p = element.point;
@@ -369,16 +383,14 @@ class CandlePainter extends CustomPainter {
               element.linePoint.y.toDouble() + element.lineHeight),
         );
         paintMaxAndMinLabel(canvas, size, paint, element);
-        if (element.ma.length == config.maIndexTypes.length &&
-            element.ma.length > 0) {
+        if (element.ma.length > 0) {
           int maIndex = 0;
           element.ma.forEach((element1) {
-            if (element.index == 0) {
-              maPaths[maIndex].moveTo(element.linePoint.x.toDouble(),
-                  element.convertY(element.ma[maIndex]));
+            if (maPoints.length <= maIndex) {
+              maPoints.add([]);
             }
-            maPaths[maIndex].lineTo(element.linePoint.x.toDouble(),
-                element.convertY(element.ma[maIndex]));
+            maPoints[maIndex].add(Offset(element.linePoint.x.toDouble(),
+                element.convertY(element.ma[maIndex])));
             maIndex++;
           });
         }
@@ -388,13 +400,12 @@ class CandlePainter extends CustomPainter {
     paintNowPrice(canvas, size, paint);
     paintCross(canvas, size, paint, selPaintModel);
     paintAlert(canvas, size, paint, selPaintModel);
-    paint.style = PaintingStyle.stroke;
+
     int index = 0;
     config.maIndexTypes.forEach((element) {
-      canvas.drawPath(maPaths[index], paint..color = element.lineColor);
+      paintMa(canvas, size, paint, maPoints[index], element);
       index++;
     });
-    
   }
 
   @override

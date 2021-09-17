@@ -28,8 +28,14 @@ class _FListViewState extends State<FListView> {
     RowModel m2 = RowModel();
     m2.token0 = Token("BNB", "BNB");
     m2.token1 = Token("USDT", "USDT");
+    RowModel m3 = RowModel();
+    m3.token0 = Token("FTM", "FTM");
+    m3.token1 = Token("USDT", "USDT");
+    RowModel m4 = RowModel();
+    m4.token0 = Token("CELR", "CELR");
+    m4.token1 = Token("USDT", "USDT");
     setState(() {
-      datas = [m, m2];
+      datas = [m, m2, m3, m4];
       _subscriptionData();
     });
 

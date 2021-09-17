@@ -79,7 +79,7 @@ class _ChartContainerState extends State<ChartContainer> {
 
       int width = size == null ? config.width : size.width.toInt();
       int oneScreenNum = width ~/ elementW;
-      int rightNum = offset ~/ elementW;
+      int rightNum = (offset / elementW).round();
       int fromNum = rightNum + oneScreenNum;
       if (fromNum > _datas.length) {
         // 一个屏幕显示的数量超出总共的数量
@@ -94,9 +94,9 @@ class _ChartContainerState extends State<ChartContainer> {
         List<HqChartData> nowDisplay = [];
         int from = _datas.length - fromNum;
         if (to == _datas.length - 1) {
-          nowDisplay = _datas.sublist(from);
+          nowDisplay = [..._datas.sublist(from)];
         } else {
-          nowDisplay = _datas.sublist(from, to);
+          nowDisplay = [..._datas.sublist(from, to)];
         }
 
         if (config.maIndexTypes.length > 0) {
