@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:provider/provider.dart';
@@ -13,7 +15,6 @@ class Window extends StatefulWidget {
 }
 
 class _Window extends State<Window> {
-  final Nav nav = Nav();
   Widget? zeroPage;
   @override
   void initState() {
@@ -47,7 +48,10 @@ class _Window extends State<Window> {
             padding: EdgeInsets.all(0),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(4))));
-    nav.setZeroPage(MainPage());
+    Color bg = Colors.white;
+    if (Platform.isMacOS) {
+      bg = Colors.transparent;
+    }
     // nav.setZeroPage(Container(width: 300, height: 300, color: Colors.blue.withAlpha(0)));
     return ChangeNotifierProvider(
       create: (_) => GNTheme(),
@@ -56,8 +60,8 @@ class _Window extends State<Window> {
         darkTheme: darkThemeData,
         title: 'Stocks',
         home: Scaffold(
-          body: nav,
-          backgroundColor: Colors.transparent,
+          body: Nav(MainPage()),
+          backgroundColor: bg,
         ),
         localizationsDelegates: GNLocalizations.localizationsDelegates,
         supportedLocales: GNLocalizations.supportedLocales,

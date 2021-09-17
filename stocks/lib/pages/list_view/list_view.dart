@@ -22,20 +22,16 @@ class _FListViewState extends State<FListView> {
   @override
   void initState() {
     // print("initState");
-    RowModel m = RowModel();
-    m.token0 = Token("DOGE", "DOGE");
-    m.token1 = Token("USDT", "USDT");
-    RowModel m2 = RowModel();
-    m2.token0 = Token("BNB", "BNB");
-    m2.token1 = Token("USDT", "USDT");
-    RowModel m3 = RowModel();
-    m3.token0 = Token("FTM", "FTM");
-    m3.token1 = Token("USDT", "USDT");
-    RowModel m4 = RowModel();
-    m4.token0 = Token("CELR", "CELR");
-    m4.token1 = Token("USDT", "USDT");
+    List<RowModel> _data = [];
+    ["DOGE/USDT", "BNB/USDT", "FTM/USDT", "SOL/USDT", "EOS/USDT", "CELR/USDT", "BTC/USDT", "ETH/USDT"].forEach((element) {
+      RowModel m = RowModel();
+      List arr = element.split('/');
+      m.token0 = Token(arr[0], arr[0]);
+      m.token1 = Token(arr[1], arr[1]);
+      _data.add(m);
+    });
     setState(() {
-      datas = [m, m2, m3, m4];
+      datas = _data;
       _subscriptionData();
     });
 

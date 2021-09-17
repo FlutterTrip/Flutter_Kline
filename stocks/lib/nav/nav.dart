@@ -10,9 +10,10 @@ class Nav extends StatelessWidget with WidgetsBindingObserver {
 
   Nav._internal();
   
-  factory Nav() {
+  factory Nav([Widget? zeroPage]) {
     if (_m == null) {
       _m = Nav._internal();
+      _m!.zeroPage = zeroPage;
       WidgetsBinding.instance!.addObserver(_m!);
     }
     return _m!;

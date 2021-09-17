@@ -22,6 +22,7 @@ class VolModel extends HqChartData {
     cjl = data.cjl;
     cje = data.cje;
     isEmpty = data.isEmpty;
+    cjlMa = data.cjlMa;
   }
 
   Color get color {
@@ -60,6 +61,7 @@ class VolPainter extends CustomPainter {
       _datas.forEach((element) {
         if (!element.isEmpty) {
           nums.add(double.parse(element.cjl));
+          nums = [...nums, ...element.cjlMa];
         }
       });
 
@@ -84,10 +86,28 @@ class VolPainter extends CustomPainter {
     }
   }
 
+  paintMa(Canvas canvas, Size size, Paint paint, List<Offset> points,
+      ChartMAIndexConfig config) {
+    paint.style = PaintingStyle.stroke;
+    Path path = Path();
+    bool isMove = false;
+    points.forEach((element) {
+      if (isMove) {
+        path.lineTo(element.dx, element.dy);
+      }
+      if (element.dx != 0 && !isMove) {
+        path.moveTo(element.dx, element.dy);
+        isMove = true;
+      }
+    });
+    canvas.drawPath(path, paint..color = config.lineColor);
+  }
+
   @override
   paint(Canvas canvas, Size size) {
     Paint paint = Paint();
     paint.strokeWidth = 1;
+    List<List<Offset>> maPoints = [];
     _paintModels.forEach((element) {
       if (!element.isEmpty) {
         Point p = element.point;
@@ -98,7 +118,25 @@ class VolPainter extends CustomPainter {
             p.x.toDouble() + 1, p.y.toDouble(), s.width - 1, s.height);
         // print(DateTime.fromMillisecondsSinceEpoch(element.time));
         canvas.drawRect(r, paint..color = element.color);
+
+        if (element.cjlMa.length > 0) {
+          int maIndex = 0;
+          element.cjlMa.forEach((element1) {
+            if (maPoints.length <= maIndex) {
+              maPoints.add([]);
+            }
+            maPoints[maIndex].add(Offset(element.point.x.toDouble() + s.width/2,
+                element.convertY(element.cjlMa[maIndex])));
+            maIndex++;
+          });
+        }
       }
+    });
+
+    int index = 0;
+    config.maIndexTypes.forEach((element) {
+      paintMa(canvas, size, paint, maPoints[index], element);
+      index++;
     });
   }
 

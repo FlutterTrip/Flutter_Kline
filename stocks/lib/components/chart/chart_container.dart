@@ -99,37 +99,52 @@ class _ChartContainerState extends State<ChartContainer> {
           nowDisplay = [..._datas.sublist(from, to)];
         }
 
-        if (config.maIndexTypes.length > 0) {
-          int indexConfigIndex = 0;
-          config.maIndexTypes.forEach((element) {
-            int needLeftNum = element.ma;
-            List<HqChartData> needLeftData = [];
-            if (from >= needLeftNum) {
-              needLeftData = _datas.sublist(from - needLeftNum, from + 1);
-            }
-            List<HqChartData> n = [...needLeftData, ...nowDisplay];
-            List<HqChartData> t = [];
-            n.forEach((element1) {
-              if (!element1.isEmpty) {
-                t.add(element1);
-                if (t.length >= needLeftNum) {
-                  double ma = 0;
-                  t.forEach((element2) {
-                    ma += double.parse(element2.spj);
-                  });
-                  ma = ma / needLeftNum;
-                  if (element1.ma.length > indexConfigIndex) {
-                    element1.ma[indexConfigIndex] = ma;
-                  } else {
-                    element1.ma.add(ma);
-                  }
-                  t.removeAt(0);
-                }
+        widget.configs.forEach((config) {
+          if (config.maIndexTypes.length > 0) {
+            int indexConfigIndex = 0;
+            config.maIndexTypes.forEach((element) {
+              int needLeftNum = element.ma;
+              List<HqChartData> needLeftData = [];
+              if (from >= needLeftNum) {
+                needLeftData = _datas.sublist(from - needLeftNum, from + 1);
               }
+              List<HqChartData> n = [...needLeftData, ...nowDisplay];
+              List<HqChartData> t = [];
+              n.forEach((element1) {
+                if (!element1.isEmpty) {
+                  t.add(element1);
+                  if (t.length >= needLeftNum) {
+                    double ma = 0;
+                    t.forEach((element2) {
+                      String typeNum =
+                          element.maIndexType == ChartMAIndexType.CJL
+                              ? element2.cjl
+                              : element2.spj;
+                      ma += double.parse(typeNum);
+                    });
+                    ma = ma / needLeftNum;
+                    if (element.maIndexType == ChartMAIndexType.CJL) {
+                      if (element1.cjlMa.length > indexConfigIndex) {
+                        element1.cjlMa[indexConfigIndex] = ma;
+                      } else {
+                        element1.cjlMa.add(ma);
+                      }
+                    } else {
+                      if (element1.ma.length > indexConfigIndex) {
+                        element1.ma[indexConfigIndex] = ma;
+                      } else {
+                        element1.ma.add(ma);
+                      }
+                    }
+                    t.removeAt(0);
+                  }
+                }
+              });
+              indexConfigIndex++;
             });
-            indexConfigIndex++;
-          });
-        }
+          }
+        });
+
         setState(() {
           _nowDisplayData = nowDisplay;
         });

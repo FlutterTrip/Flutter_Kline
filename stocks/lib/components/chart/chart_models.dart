@@ -7,11 +7,14 @@ enum ChartType {
   Vol,
   FS,
 }
-enum ChartIndexType { MA5 }
+enum ChartIndexType { MA }
+
+enum ChartMAIndexType { SPJ, CJL }
 
 class HqChartData extends HQData {
   bool isEmpty = false; // 是否为空模型，为 true 时候，为填充作用
   List<double> ma = []; // 数据下标对应着，配置里指数配置的下标
+  List<double> cjlMa = [];
 }
 
 // 基础元素绘制属性
@@ -40,12 +43,13 @@ class GridConfig extends ChartLineBaseConfig with ChartFontBaseConfig {
 
 // 指标图基础配置属性
 class ChartIndexBaseConfig {
-  ChartIndexType indexType = ChartIndexType.MA5;
+  ChartIndexType indexType = ChartIndexType.MA;
 }
 
 class ChartMAIndexConfig extends ChartIndexBaseConfig with ChartLineBaseConfig {
-  Color lineColor = Colors.yellow;
+  Color lineColor = Colors.yellowAccent;
   int ma = 5;
+  ChartMAIndexType maIndexType = ChartMAIndexType.SPJ;
 }
 
 // 基础配置属性

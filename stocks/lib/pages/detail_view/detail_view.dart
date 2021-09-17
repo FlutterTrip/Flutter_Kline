@@ -30,9 +30,21 @@ class _DetailViewState extends State<DetailView> {
     ChartMAIndexConfig ma20 = ChartMAIndexConfig();
     ma20.ma = 20;
     ma20.lineColor = Colors.deepPurple;
-    kConfig.maIndexTypes = [ma5, ma10, ma20];
+    ChartMAIndexConfig ma60 = ChartMAIndexConfig();
+    ma60.ma = 60;
+    ma60.lineColor = Colors.lightBlue;
+    kConfig.maIndexTypes = [ma5, ma10, ma20, ma60];
+
+    ChartMAIndexConfig volMa5 = ChartMAIndexConfig();
+    volMa5.maIndexType = ChartMAIndexType.CJL;
+    ChartMAIndexConfig volMa10 = ChartMAIndexConfig();
+    volMa10.maIndexType = ChartMAIndexType.CJL;
+    volMa10.ma = 10;
+    volMa10.lineColor = Colors.pinkAccent;
     VolChartConfig vConfig = VolChartConfig();
     vConfig.isAutoWidth = true;
+    vConfig.maIndexTypes = [volMa5, volMa10];
+    
     _configs = [kConfig, vConfig];
 
     GNPagesAction().registerAction(PageName.detail, FuncName.clickStock, widget,
