@@ -373,7 +373,7 @@ class CandlePainter extends CustomPainter {
               size.height);
         }
         ChartRenderTools.drawRect(canvas, paint..color = element.color,
-            Offset(p.x.toDouble(), p.y.toDouble()), s.width, s.height);
+            Offset(p.x.toDouble(), p.y.toDouble()), s.width - 1, s.height);
         ChartRenderTools.drawLine(
           canvas,
           paint,
