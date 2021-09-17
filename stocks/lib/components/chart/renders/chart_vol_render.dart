@@ -89,6 +89,7 @@ class VolPainter extends CustomPainter {
   paintMa(Canvas canvas, Size size, Paint paint, List<Offset> points,
       ChartMAIndexConfig config) {
     paint.style = PaintingStyle.stroke;
+    paint.strokeWidth = config.lineWidth;
     Path path = Path();
     bool isMove = false;
     points.forEach((element) {
@@ -125,7 +126,8 @@ class VolPainter extends CustomPainter {
             if (maPoints.length <= maIndex) {
               maPoints.add([]);
             }
-            maPoints[maIndex].add(Offset(element.point.x.toDouble() + s.width/2,
+            maPoints[maIndex].add(Offset(
+                element.point.x.toDouble() + s.width / 2,
                 element.convertY(element.cjlMa[maIndex])));
             maIndex++;
           });

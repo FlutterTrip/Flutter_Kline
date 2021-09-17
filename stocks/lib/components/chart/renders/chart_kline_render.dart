@@ -330,6 +330,7 @@ class CandlePainter extends CustomPainter {
   paintMa(Canvas canvas, Size size, Paint paint, List<Offset> points,
       ChartMAIndexConfig config) {
     paint.style = PaintingStyle.stroke;
+    paint.strokeWidth = config.lineWidth;
     Path path = Path();
     bool isMove = false;
     points.forEach((element) {
