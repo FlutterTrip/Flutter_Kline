@@ -25,6 +25,7 @@ class PaintModel extends HqChartData {
     cjl = data.cjl;
     cje = data.cje;
     isEmpty = data.isEmpty;
+    ma = data.ma;
   }
 
   String get timeStr {
@@ -84,6 +85,7 @@ class CandlePainter extends CustomPainter {
         if (!element.isEmpty) {
           nums.add(double.parse(element.maxPrice));
           nums.add(double.parse(element.minPrice));
+          nums = [...nums, ...element.ma];
         }
       });
 
@@ -332,6 +334,10 @@ class CandlePainter extends CustomPainter {
     grid(canvas, size, paint);
     paint.strokeWidth = 1;
     PaintModel? selPaintModel = null;
+    List<Path> maPaths = [];
+    config.maIndexTypes.forEach((element) {
+      maPaths.add(Path());
+    });
     _paintModels.forEach((element) {
       if (!element.isEmpty) {
         Point p = element.point;
@@ -362,14 +368,33 @@ class CandlePainter extends CustomPainter {
           Offset(element.linePoint.x.toDouble(),
               element.linePoint.y.toDouble() + element.lineHeight),
         );
-
         paintMaxAndMinLabel(canvas, size, paint, element);
+        if (element.ma.length == config.maIndexTypes.length &&
+            element.ma.length > 0) {
+          int maIndex = 0;
+          element.ma.forEach((element1) {
+            if (element.index == 0) {
+              maPaths[maIndex].moveTo(element.linePoint.x.toDouble(),
+                  element.convertY(element.ma[maIndex]));
+            }
+            maPaths[maIndex].lineTo(element.linePoint.x.toDouble(),
+                element.convertY(element.ma[maIndex]));
+            maIndex++;
+          });
+        }
       }
     });
 
     paintNowPrice(canvas, size, paint);
     paintCross(canvas, size, paint, selPaintModel);
     paintAlert(canvas, size, paint, selPaintModel);
+    paint.style = PaintingStyle.stroke;
+    int index = 0;
+    config.maIndexTypes.forEach((element) {
+      canvas.drawPath(maPaths[index], paint..color = element.lineColor);
+      index++;
+    });
+    
   }
 
   @override

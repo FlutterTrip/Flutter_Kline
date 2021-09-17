@@ -7,10 +7,11 @@ enum ChartType {
   Vol,
   FS,
 }
-enum ChartIndexType { MA }
+enum ChartIndexType { MA5 }
 
 class HqChartData extends HQData {
   bool isEmpty = false; // 是否为空模型，为 true 时候，为填充作用
+  List<double> ma = []; // 数据下标对应着，配置里指数配置的下标
 }
 
 // 基础元素绘制属性
@@ -39,11 +40,12 @@ class GridConfig extends ChartLineBaseConfig with ChartFontBaseConfig {
 
 // 指标图基础配置属性
 class ChartIndexBaseConfig {
-  ChartIndexType indexType = ChartIndexType.MA;
+  ChartIndexType indexType = ChartIndexType.MA5;
 }
 
 class ChartMAIndexConfig extends ChartIndexBaseConfig with ChartLineBaseConfig {
-  Color lineColor = Colors.purple;
+  Color lineColor = Colors.yellow;
+  int ma = 5;
 }
 
 // 基础配置属性
@@ -52,7 +54,7 @@ class ChartBaseConfig {
   int height = 300;
   double lineWidth = 1;
   ChartType type = ChartType.Kline;
-  List<ChartIndexBaseConfig> indexTypes = []; // 需要的指标配置，需要在图上绘制的
+  List<ChartMAIndexConfig> maIndexTypes = []; // 需要的指标配置，需要在图上绘制的
 
   bool isAutoWidth = false;
   int paddingTop = 8;

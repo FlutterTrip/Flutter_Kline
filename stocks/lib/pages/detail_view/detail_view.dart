@@ -23,6 +23,14 @@ class _DetailViewState extends State<DetailView> {
   void initState() {
     KlineChartConfig kConfig = KlineChartConfig();
     kConfig.isAutoWidth = true;
+    ChartMAIndexConfig ma5 = ChartMAIndexConfig();
+    ChartMAIndexConfig ma10 = ChartMAIndexConfig();
+    ma10.ma = 10;
+    ma10.lineColor = Colors.pinkAccent;
+    ChartMAIndexConfig ma20 = ChartMAIndexConfig();
+    ma20.ma = 20;
+    ma20.lineColor = Colors.deepPurple;
+    kConfig.maIndexTypes = [ma5, ma10, ma20];
     VolChartConfig vConfig = VolChartConfig();
     vConfig.isAutoWidth = true;
     _configs = [kConfig, vConfig];

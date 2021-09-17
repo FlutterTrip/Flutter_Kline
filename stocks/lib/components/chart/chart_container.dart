@@ -92,7 +92,44 @@ class _ChartContainerState extends State<ChartContainer> {
       }
       if (fromNum <= _datas.length) {
         List<HqChartData> nowDisplay = [];
-        nowDisplay = _datas.sublist(_datas.length - fromNum, to);
+        int from = _datas.length - fromNum;
+        if (to == _datas.length - 1) {
+          nowDisplay = _datas.sublist(from);
+        } else {
+          nowDisplay = _datas.sublist(from, to);
+        }
+
+        if (config.maIndexTypes.length > 0) {
+          int indexConfigIndex = 0;
+          config.maIndexTypes.forEach((element) {
+            int needLeftNum = element.ma;
+            List<HqChartData> needLeftData = [];
+            if (from >= needLeftNum) {
+              needLeftData = _datas.sublist(from - needLeftNum, from + 1);
+            }
+            List<HqChartData> n = [...needLeftData, ...nowDisplay];
+            List<HqChartData> t = [];
+            n.forEach((element1) {
+              if (!element1.isEmpty) {
+                t.add(element1);
+                if (t.length >= needLeftNum) {
+                  double ma = 0;
+                  t.forEach((element2) {
+                    ma += double.parse(element2.spj);
+                  });
+                  ma = ma / needLeftNum;
+                  if (element1.ma.length > indexConfigIndex) {
+                    element1.ma[indexConfigIndex] = ma;
+                  } else {
+                    element1.ma.add(ma);
+                  }
+                  t.removeAt(0);
+                }
+              }
+            });
+            indexConfigIndex++;
+          });
+        }
         setState(() {
           _nowDisplayData = nowDisplay;
         });
