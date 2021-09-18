@@ -98,7 +98,7 @@ class _ChartContainerState extends State<ChartContainer> {
         } else {
           nowDisplay = [..._datas.sublist(from, to)];
         }
-
+      
         widget.configs.forEach((config) {
           if (config.maIndexTypes.length > 0) {
             int indexConfigIndex = 0;

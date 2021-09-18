@@ -404,7 +404,9 @@ class CandlePainter extends CustomPainter {
 
     int index = 0;
     config.maIndexTypes.forEach((element) {
-      paintMa(canvas, size, paint, maPoints[index], element);
+      if (maPoints.length > index) {
+        paintMa(canvas, size, paint, maPoints[index], element);
+      }
       index++;
     });
   }
