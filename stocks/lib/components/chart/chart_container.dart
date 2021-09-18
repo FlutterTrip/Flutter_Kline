@@ -78,7 +78,7 @@ class _ChartContainerState extends State<ChartContainer> {
       config as ChartBaseConfig;
 
       int width = size == null ? config.width : size.width.toInt();
-      int oneScreenNum = width ~/ elementW;
+      int oneScreenNum = (width / elementW).round();
       int rightNum = (offset / elementW).round();
       int fromNum = rightNum + oneScreenNum;
       if (fromNum > _datas.length) {
