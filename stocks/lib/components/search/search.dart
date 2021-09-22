@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:stocks/components/exchange_symbols/exchange_symbols.dart';
 import 'package:stocks/components/space/space.dart';
+import 'package:stocks/manager/exchange_manager.dart';
 import 'package:stocks/models/tokenModel.dart';
 import 'package:stocks/nav/nav.dart';
 import 'package:stocks/components/text/text.dart';
@@ -20,16 +22,41 @@ class _GKSearchViewState extends State<GKSearchView> {
   String searchStr = "";
   void Function(Pair)? _onSelected;
   _GKSearchViewState(this._onSelected);
+  List<Widget> getExchangeLogo(Pair pair) {
+    List<Widget> r = [];
+    pair.exchangeSymbol.forEach((exchangeSymbol) {
+      ExchangeModel? exchange =
+          ExchangeManager.getExchangeModel(exchangeSymbol);
+      if (exchange != null) {
+        r.add(exchange.logo != null && exchange.logo!.length > 0
+            ? Image.network(
+                exchange.logo!,
+                width: GNTheme().fontSizeType(FontSizeType.s),
+                loadingBuilder: (context, o, s) {
+                  return GNText("${exchange.name} ", color: exchange.mainColor,);
+                },
+                errorBuilder: (context, o, s) {
+                  return GNText("${exchange.name} ", color: exchange.mainColor);
+                },
+              )
+            : GNText("${exchange.name}", color: exchange.mainColor));
+      }
+    });
+    return r;
+  }
+
   List<Widget> getRow() {
     List<Widget> r = [];
     result.forEach((element) {
       r.add(GKWrappedButton(
-        onPressed: (){
+        onPressed: () {
           this._onSelected!(element);
         },
         child: Row(
           children: [
             Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
@@ -39,11 +66,13 @@ class _GKSearchViewState extends State<GKSearchView> {
                     heighlightText(searchStr.toLowerCase(),
                         element.token1.symbol.toLowerCase()),
                   ],
-                )
+                ),
+                ExchangeSymbols(element.exchangeSymbol)
               ],
             )
           ],
-        ),));
+        ),
+      ));
     });
     return r;
   }
@@ -119,7 +148,7 @@ class _GKSearchViewState extends State<GKSearchView> {
                   filled: true,
                   hintText: GNLocalizations.str("Input here")),
             )),
-            GNSpace(),
+        GNSpace(),
         Expanded(
             child: SingleChildScrollView(
           child: Column(

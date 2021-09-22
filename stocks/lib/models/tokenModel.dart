@@ -24,6 +24,7 @@ class CurrencyDesc extends TokenDesc {
 class Pair {
   Token token0 = Token('Doge', 'Doge');
   Token token1 = Token('Bnb', 'Bnb');
+  Map<String, String> otherParm = {};
   List<ExchangeSymbol> exchangeSymbol = [];
   String get symbol => '${this.token0.symbol}${this.token1.symbol}'.toLowerCase();
   @override

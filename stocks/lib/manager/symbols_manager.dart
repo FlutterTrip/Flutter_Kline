@@ -99,24 +99,85 @@ class SymbolsManager {
   }
 
   _analysisSourceSymbols(ExchangeSymbol symbol, Map data) {
-    if (symbol == ExchangeSymbol.BSC) {
-      List l = data["symbols"];
-      l.forEach((element) {
-        if (element["status"] == "TRADING") {
-          String s = element["symbol"].toString().toLowerCase();
-          Pair? p = pairsMap[s];
-          if (p == null) {
-            Pair pair = Pair();
-            pair.exchangeSymbol = [symbol];
-            pair.token0 = Token(element["baseAsset"], element["baseAsset"]);
-            pair.token1 = Token(element["quoteAsset"], element["quoteAsset"]);
-            pairsMap[s] = pair;
-          } else {
-            p.exchangeSymbol.remove(symbol);
-            p.exchangeSymbol.add(symbol);
-          }
-        }
-      });
+    switch (symbol) {
+      case ExchangeSymbol.BSC:
+        _analysisBSC(data);
+        break;
+      case ExchangeSymbol.HB:
+        _analysisHB(data);
+        break;
+      case ExchangeSymbol.OK:
+        _analysisOK(data);
+        break;
+      default:
+        break;
     }
+  }
+
+  _analysisOK(Map data) {
+    ExchangeSymbol symbol = ExchangeSymbol.OK;
+    List l = data["data"];
+    l.forEach((element) {
+      if (element["state"] == "live") {
+        String s = "${element["baseCcy"].toString().toLowerCase()}${element["quoteCcy"].toString().toLowerCase()}";
+        Pair? p = pairsMap[s];
+        if (p == null) {
+          Pair pair = Pair();
+          pair.exchangeSymbol = [symbol];
+          pair.token0 =
+              Token(element["baseCcy"], element["baseCcy"]);
+          pair.token1 =
+              Token(element["quoteCcy"], element["quoteCcy"]);
+          pair.otherParm["instId"] = element["instId"].toString();
+          pairsMap[s] = pair;
+        } else {
+          p.otherParm["instId"] = element["instId"].toString();
+          p.exchangeSymbol.remove(symbol);
+          p.exchangeSymbol.add(symbol);
+        }
+      }
+    });
+  }
+
+  _analysisHB(Map data) {
+    ExchangeSymbol symbol = ExchangeSymbol.HB;
+    List l = data["data"];
+    l.forEach((element) {
+      if (element["state"] == "online") {
+        String s = element["symbol"].toString().toLowerCase();
+        Pair? p = pairsMap[s];
+        if (p == null) {
+          Pair pair = Pair();
+          pair.exchangeSymbol = [symbol];
+          pair.token0 = Token(element["base-currency"], element["base-currency"]);
+          pair.token1 = Token(element["quote-currency"], element["quote-currency"]);
+          pairsMap[s] = pair;
+        } else {
+          p.exchangeSymbol.remove(symbol);
+          p.exchangeSymbol.add(symbol);
+        }
+      }
+    });
+  }
+
+  _analysisBSC(Map data) {
+    ExchangeSymbol symbol = ExchangeSymbol.BSC;
+    List l = data["symbols"];
+    l.forEach((element) {
+      if (element["status"] == "TRADING") {
+        String s = element["symbol"].toString().toLowerCase();
+        Pair? p = pairsMap[s];
+        if (p == null) {
+          Pair pair = Pair();
+          pair.exchangeSymbol = [symbol];
+          pair.token0 = Token(element["baseAsset"], element["baseAsset"]);
+          pair.token1 = Token(element["quoteAsset"], element["quoteAsset"]);
+          pairsMap[s] = pair;
+        } else {
+          p.exchangeSymbol.remove(symbol);
+          p.exchangeSymbol.add(symbol);
+        }
+      }
+    });
   }
 }
