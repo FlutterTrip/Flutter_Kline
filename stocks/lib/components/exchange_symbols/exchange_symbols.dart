@@ -9,8 +9,7 @@ class ExchangeSymbols extends StatelessWidget {
   List<Widget> getExchangeLogo() {
     List<Widget> r = [];
     exchangeSymbol.forEach((element) {
-      ExchangeModel? exchange =
-          ExchangeManager.getExchangeModel(element);
+      ExchangeModel? exchange = ExchangeManager.getExchangeModel(element);
       r.add(getImg(exchange));
     });
     return r;
@@ -18,29 +17,33 @@ class ExchangeSymbols extends StatelessWidget {
 
   Widget getImg(ExchangeModel? exchange) {
     if (exchange != null) {
+      GNText text = GNText(
+        "${exchange.name} ",
+        color: exchange.mainColor,
+      );
       return exchange.logo != null && exchange.logo!.length > 0
           ? Image.network(
               exchange.logo!,
               width: GNTheme().fontSizeType(FontSizeType.s),
               loadingBuilder: (context, o, s) {
-                return GNText(
-                  "${exchange.name} ",
-                  color: exchange.mainColor,
-                );
+                return text;
               },
               errorBuilder: (context, o, s) {
-                return GNText("${exchange.name} ", color: exchange.mainColor);
+                return text;
               },
             )
-          : GNText("${exchange.name}", color: exchange.mainColor);
+          : text;
     }
     return Container();
   }
 
   @override
   Widget build(BuildContext context) {
-    return exchangeSymbol.length > 0 ? Container(
-      child: exchangeSymbol.length == 1 ? getImg(ExchangeManager.getExchangeModel(exchangeSymbol[0])) : Row(children:getExchangeLogo())
-    ) : Container();
+    return exchangeSymbol.length > 0
+        ? Container(
+            child: exchangeSymbol.length == 1
+                ? getImg(ExchangeManager.getExchangeModel(exchangeSymbol[0]))
+                : Row(children: getExchangeLogo()))
+        : Container();
   }
 }

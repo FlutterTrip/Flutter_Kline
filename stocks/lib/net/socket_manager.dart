@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:stocks/components/exchange_symbols/exchange_symbols.dart';
 import 'package:stocks/models/tokenModel.dart';
 import 'package:stocks/net/api_manager.dart';
 import 'package:stocks/net/net_adapter.dart';
@@ -48,6 +49,9 @@ class _SocketInfo {
   Adapter? adapter;
   Map<SubscriptionType, List<SubscriptionParm>> subscriptionerParm = {};
   onData(dynamic message) {
+    message = adapter!.gzip(message);
+    message = adapter!.pingPong(socket, message);
+
     assert(adapter != null);
     SubscriptionType? key = adapter!.filterDataType(message);
     if (this.subscriptionerParm.keys.length > 0 && key != null) {
@@ -94,7 +98,12 @@ class SocketManager {
     Adapter? a = Adapter.getAdapterWith(parm.symbol);
     assert(a != null);
     parm.subscriptionerFunc = onData;
-    parm.onErrorFunc = onError;
+    parm.onErrorFunc = (error){
+      print(error);
+      if (onError != null) {
+        onError(error);
+      }
+    };
     parm.onSuccFunc = onSucc;
     this._startSocket(parm);
 
@@ -210,8 +219,15 @@ class _Socket {
   }
 
   send(dynamic message) {
-    print("socket send: $message");
-    channel!.sink.add(message);
+    if (message is List && message.length > 0) {
+      message.forEach((element) {
+        print("socket send: $element");
+        channel!.sink.add(element);
+      });
+    } else {
+      print("socket send: $message");
+      channel!.sink.add(message);
+    }
   }
 
   close() {
