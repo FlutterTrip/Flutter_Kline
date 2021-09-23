@@ -94,18 +94,26 @@ class SocketManager {
   }
 
   subscription(SubscriptionParm parm, void Function(dynamic) onData,
-      [void Function()? onSucc, void Function(dynamic error)? onError]) {
+      {void Function()? onSucc,
+      void Function(dynamic error)? onError,
+      void Function(SubscriptionParm)? onDone}) {
     Adapter? a = Adapter.getAdapterWith(parm.symbol);
     assert(a != null);
     parm.subscriptionerFunc = onData;
-    parm.onErrorFunc = (error){
+    parm.onErrorFunc = (error) {
       print(error);
       if (onError != null) {
         onError(error);
       }
     };
     parm.onSuccFunc = onSucc;
-    this._startSocket(parm);
+    this._startSocket(parm, () {
+      print('${parm.symbol} onDone');
+      socketMap[parm.symbol] = null;
+      if (onDone != null) {
+        onDone(parm);
+      }
+    });
 
     this._sendMessage(parm.symbol, a!.subscription(parm));
   }
@@ -150,7 +158,7 @@ class SocketManager {
     return r;
   }
 
-  _startSocket(SubscriptionParm parm) {
+  _startSocket(SubscriptionParm parm, void Function() ondone) {
     ExchangeSymbol symbol = parm.symbol;
     _SocketInfo? s = socketMap[symbol];
     if (s == null) {
@@ -158,7 +166,7 @@ class SocketManager {
       socketMap[symbol] = s;
     }
     if (s.socket.channel?.innerWebSocket == null) {
-      s.socket.start(s.onData, parm.onErrorFunc);
+      s.socket.start(s.onData, parm.onErrorFunc, ondone);
     }
 
     List<SubscriptionParm>? parms = s.subscriptionerParm[parm.type];
@@ -202,7 +210,8 @@ class _Socket {
     this.channel = IOWebSocketChannel.connect(url);
   }
 
-  start(void Function(dynamic) onData, void Function(dynamic)? onError) {
+  start(void Function(dynamic) onData, void Function(dynamic)? onError,
+      void Function()? onDone) {
     if (this.channel != null) {
       // if (this.channel.stream. != status.abnormalClosure)
       this.channel!.stream.listen((message) {
@@ -213,7 +222,9 @@ class _Socket {
         }
         print(error);
       }, onDone: () {
-        print('onDone');
+        if (onDone != null) {
+          onDone();
+        }
       });
     }
   }

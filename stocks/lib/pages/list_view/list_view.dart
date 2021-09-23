@@ -37,15 +37,16 @@ class _FListViewState extends State<FListView> {
     });
     setState(() {
       datas = _data;
-      _subscriptionData();
+      _subscriptionData(null);
     });
 
     super.initState();
   }
 
-  _subscriptionData() {
+  _subscriptionData(ExchangeSymbol? _symbol) {
     SocketManager sm = SocketManager.instance();
-    ExchangeManager.exchanges.forEach((symbol, element) {
+
+    _subscriptionDataWithSymbol(ExchangeSymbol symbol) {
       List<RowModel> datas_ = [];
       datas.forEach((e) {
         if (e.exchangeSymbol.indexOf(symbol) >= 0) {
@@ -65,9 +66,19 @@ class _FListViewState extends State<FListView> {
               }
             });
           });
+        }, onDone: (parm) {
+          _subscriptionData(parm.symbol);
         });
       }
-    });
+    }
+
+    if (_symbol == null) {
+      ExchangeManager.exchanges.forEach((symbol, element) {
+        _subscriptionDataWithSymbol(symbol);
+      });
+    } else {
+      _subscriptionDataWithSymbol(_symbol);
+    }
   }
 
   List<PairRowView> getPairRowViews() {
@@ -133,7 +144,7 @@ class _FListViewState extends State<FListView> {
                     GKSearch(onSelected: (Pair onSel) {
                       setState(() {
                         this.datas.add(RowModel(onSel));
-                        _subscriptionData();
+                        _subscriptionData(null);
                       });
                     }).show();
                   },
@@ -253,7 +264,9 @@ class PairRowView extends StatelessWidget {
               ],
             )
           ]));
-      r.add(GNSpace(height: 4,));
+      r.add(GNSpace(
+        height: 4,
+      ));
     });
     return r;
   }
