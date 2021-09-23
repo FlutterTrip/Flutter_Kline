@@ -52,10 +52,10 @@ class OKAdapter extends Adapter {
       parm.pairs.forEach((pair) {
         String instId = pair.otherParm["instId"] ?? "";
         if (instId == "") {
-          instId = "${pair.token0.symbol.toUpperCase()}-${pair.token1.symbol.toUpperCase()}";
+          instId =
+              "${pair.token0.symbol.toUpperCase()}-${pair.token1.symbol.toUpperCase()}";
         }
-        streamNameWithParm
-            .add({"channel": "tickers", "instId": instId});
+        streamNameWithParm.add({"channel": "tickers", "instId": instId});
       });
       return [
         JsonEncoder().convert({"op": "subscribe", "args": streamNameWithParm})
@@ -66,7 +66,7 @@ class OKAdapter extends Adapter {
 
   @override
   SubscriptionType? filterDataType(dynamic data) {
-    if (data is String && data.length > 0) {
+    if (data is String && data.length > 0 && data != "pong") {
       Map obj = JsonDecoder().convert(data);
       String ch = obj["arg"]["channel"] ?? "";
       if (ch.indexOf("ticker") >= 0 && obj["data"] != null) {
@@ -95,12 +95,17 @@ class OKAdapter extends Adapter {
     return [];
   }
 
+  Function ping = GNTools().throttle((socket) {
+    if (socket != null) {
+      socket.send("ping");
+    }
+    return Future.sync(() => null);
+  }, 30000);
+
   @override
   dynamic pingPong(socket, message) {
     if (socket.send != null) {
-      GNTools.debounce((){
-          socket.send("ping");
-      }, 30000);
+      ping([socket]);
     }
     return message;
   }
@@ -137,7 +142,8 @@ class OKAdapter extends Adapter {
     BaseHQData r = BaseHQData();
     r.time = int.parse(obj["ts"]);
     List t = obj["instId"].toString().split("-");
-    r.symbol = "${t[0].toString().toLowerCase()}${t[1].toString().toLowerCase()}";
+    r.symbol =
+        "${t[0].toString().toLowerCase()}${t[1].toString().toLowerCase()}";
     r.nowPrice = obj["last"].toString();
     r.kpj = obj["open24h"].toString();
     r.maxPrice = obj["high24h"].toString();
@@ -159,8 +165,8 @@ class HBAdapter extends Adapter {
       List<String> streamNameWithParm = [];
       parm.pairs.forEach((pair) {
         String symbol = pair.symbol.toLowerCase();
-        streamNameWithParm.add(JsonEncoder()
-            .convert({"sub": "market.$symbol.ticker"}));
+        streamNameWithParm
+            .add(JsonEncoder().convert({"sub": "market.$symbol.ticker"}));
       });
       return streamNameWithParm;
     }
@@ -170,13 +176,12 @@ class HBAdapter extends Adapter {
   @override
   SubscriptionType? filterDataType(dynamic data) {
     if (data is String && data.length > 0) {
-       Map obj = JsonDecoder().convert(data);
+      Map obj = JsonDecoder().convert(data);
       String ch = obj["ch"] ?? "";
       if (ch.indexOf("ticker") >= 0) {
         return SubscriptionType.baseHQ;
       }
     }
-   
   }
 
   @override

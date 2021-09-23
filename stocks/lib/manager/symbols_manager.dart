@@ -23,11 +23,13 @@ class SymbolsManager {
 
   SymbolsManager._();
 
+  static Function debounceS = GNTools().debounce((str, result) {
+    SymbolsManager m = SymbolsManager.instance();
+    result(m._search(str));
+  }, 500);
+
   static search(String str, Function(List<Pair>) result) {
-    GNTools.debounce(() {
-      SymbolsManager m = SymbolsManager.instance();
-      result(m._search(str));
-    }, 500)();
+    debounceS([str, result]);
   }
 
   List<Pair> _search(String str) {
@@ -119,15 +121,14 @@ class SymbolsManager {
     List l = data["data"];
     l.forEach((element) {
       if (element["state"] == "live") {
-        String s = "${element["baseCcy"].toString().toLowerCase()}${element["quoteCcy"].toString().toLowerCase()}";
+        String s =
+            "${element["baseCcy"].toString().toLowerCase()}${element["quoteCcy"].toString().toLowerCase()}";
         Pair? p = pairsMap[s];
         if (p == null) {
           Pair pair = Pair();
           pair.exchangeSymbol = [symbol];
-          pair.token0 =
-              Token(element["baseCcy"], element["baseCcy"]);
-          pair.token1 =
-              Token(element["quoteCcy"], element["quoteCcy"]);
+          pair.token0 = Token(element["baseCcy"], element["baseCcy"]);
+          pair.token1 = Token(element["quoteCcy"], element["quoteCcy"]);
           pair.otherParm["instId"] = element["instId"].toString();
           pairsMap[s] = pair;
         } else {
@@ -149,8 +150,10 @@ class SymbolsManager {
         if (p == null) {
           Pair pair = Pair();
           pair.exchangeSymbol = [symbol];
-          pair.token0 = Token(element["base-currency"], element["base-currency"]);
-          pair.token1 = Token(element["quote-currency"], element["quote-currency"]);
+          pair.token0 =
+              Token(element["base-currency"], element["base-currency"]);
+          pair.token1 =
+              Token(element["quote-currency"], element["quote-currency"]);
           pairsMap[s] = pair;
         } else {
           p.exchangeSymbol.remove(symbol);

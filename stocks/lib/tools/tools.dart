@@ -1,18 +1,21 @@
 import 'dart:async';
 class GNTools {
+
+  Timer? timer;
   /// 函数防抖
   ///
   /// [func]: 要执行的方法
   /// [delay]: 要迟延的时长
-  static Function debounce( Function func, [int milliseconds = 2000]) {
-    Timer? timer;
+  Function debounce( Function func, [int milliseconds = 2000]) {
+    
     Duration delay = Duration(milliseconds: milliseconds);
-    Function target = () {
+    Function target = (value) {
       if (timer != null && timer!.isActive) {
-        timer?.cancel();
+        timer!.cancel();
+        timer = null;
       }
       timer = Timer(delay, () {
-        func.call();
+        Function.apply(func, value);
       });
     };
     return target;
@@ -21,16 +24,13 @@ class GNTools {
   /// 函数节流
   ///
   /// [func]: 要执行的方法
-  static Function throttle(Future Function() func, [int milliseconds = 0]) {
-    if (func == null) {
-      return func;
-    }
+  Function throttle(Function func, [int milliseconds = 0]) {
     bool enable = true;
-    Function target = () {
+    Function target = (value) {
       if (enable == true) {
         enable = false;
-        func().then((_) {
-          if (milliseconds == null || milliseconds <= 0) {
+         Function.apply(func, value).then((_) {
+          if (milliseconds <= 0) {
             enable = true;
           } else {
             Duration delay = Duration(milliseconds: milliseconds);
