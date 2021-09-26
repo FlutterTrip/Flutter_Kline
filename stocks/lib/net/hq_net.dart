@@ -49,6 +49,7 @@ class HqNet {
       return r;
     }).catchError((error){
       print(error.toString());
+      return [];
     });
   }
 }

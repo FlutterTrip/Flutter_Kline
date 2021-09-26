@@ -60,7 +60,7 @@ class _Window extends State<Window> {
         darkTheme: darkThemeData,
         title: 'Stocks',
         home: Scaffold(
-          body: Nav(MainPage()),
+          body: SafeArea(child: Nav(MainPage())),
           backgroundColor: bg,
         ),
         localizationsDelegates: GNLocalizations.localizationsDelegates,

@@ -21,6 +21,7 @@ class _ChartContainerState extends State<ChartContainer> {
   List<HqChartData> _datas = [];
   HqChartData? _lastHqData;
   Offset? _nowKlinePoint;
+  double _scaleLevel = 0;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -98,7 +99,7 @@ class _ChartContainerState extends State<ChartContainer> {
         } else {
           nowDisplay = [..._datas.sublist(from, to)];
         }
-      
+
         widget.configs.forEach((config) {
           if (config.maIndexTypes.length > 0) {
             int indexConfigIndex = 0;
@@ -208,7 +209,58 @@ class _ChartContainerState extends State<ChartContainer> {
         },
         child: GestureDetector(
           onScaleUpdate: (event) {
-            print(event);
+            // print(event);
+            ChartBaseConfig config = widget.configs[0];
+            if (config.type == ChartType.Kline) {
+              config as KlineChartConfig;
+              int allLevel = config.maxWidth - config.minWidth;
+              int nowLevel = config.nowWidth - config.minWidth;
+              // _scaleLevel = nowLevel / allLevel;
+              
+              if (_scaleLevel <= 100) {
+                _scaleLevel += event.scale;
+              }
+              print("nowwidth: ${config.nowWidth} nowLevel: $nowLevel _scaleLevel: $_scaleLevel");
+            }
+            
+          },
+          onLongPressDown: (event){
+            setState(() {
+              _nowKlinePoint = null;
+            });
+          },
+          onLongPress: () {
+            setState(() {
+              _nowKlinePoint = null;
+            });
+          },
+          onLongPressCancel: () {
+            setState(() {
+              _nowKlinePoint = null;
+            });
+          },
+          onLongPressEnd: (event) {
+            setState(() {
+              _nowKlinePoint = null;
+            });
+          },
+          onLongPressMoveUpdate: (event) {
+            if (event.localPosition >= Offset(0, 0)) {
+              if (event.localPosition.dy <= 300) {
+                setState(() {
+                  _nowKlinePoint = event.localPosition;
+                });
+              } else {
+                setState(() {
+                  _nowKlinePoint = null;
+                });
+              }
+            }
+          },
+          onLongPressUp: (){
+            setState(() {
+              _nowKlinePoint = null;
+            });
           },
           child: Stack(
             children: [

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:stocks/models/tokenModel.dart';
 import 'package:stocks/pages/menu_view/menu_view.dart';
 import 'package:stocks/pages/list_view/list_view.dart';
 import 'package:stocks/manager/symbols_manager.dart';
 import 'package:stocks/pages/detail_view/detail_view.dart';
+import 'package:stocks/pages/page_action.dart';
 import '../../manager/responsive.dart';
 import '../../manager/method_channel_manger.dart';
 import '../../nav/nav.dart';
@@ -18,16 +20,32 @@ class _MainPageState extends State<MainPage>
   late Widget _list;
   late Widget _detail;
   GNMainViewStatus _mainViewStatus = GNMainViewStatus.standard;
-
+  GNMainViewSize? _nowSize;
+  Pair? _detailPair;
   @override
   void initState() {
     GNResponsive.registerDelegate(this);
     _list = FListView();
     _menu = MenuView();
-    _detail = DetailView();
     loadData();
     SymbolsManager.instance();
+    GNPagesAction()
+        .registerAction(PageName.main, FuncName.clickStock, widget, clickStock);
     super.initState();
+  }
+
+  clickStock(PageName name, FuncName funcName, {List<dynamic>? data}) {
+    if (data != null && data.length > 0) {
+      Pair p = data[0];
+      setState(() {
+        _detailPair = p;
+        // testData(p);
+      });
+      if (_nowSize != null && _nowSize == GNMainViewSize.small) {
+         Nav().push(DetailView(pair: p));
+      }
+     
+    }
   }
 
   loadData() async {
@@ -61,7 +79,29 @@ class _MainPageState extends State<MainPage>
 
   @override
   Widget build(BuildContext context) {
-    return Flex(direction: Axis.horizontal, children: [_menu, _list, Expanded(child: _detail)]);
+    return GNResponsive.getResponsive((GNMainViewSize s) {
+      _nowSize = s;
+      return Row(children: [
+        Visibility(
+          visible: GNMainViewSize.big == s,
+          child: _menu,
+        ),
+        Expanded(
+          child: _list,
+          flex: GNMainViewSize.big == s ? 1 : 2,
+        ),
+        Visibility(
+          visible: GNMainViewSize.big == s || GNMainViewSize.middle == s,
+          child: Expanded(
+            child: DetailView(pair: _detailPair),
+            flex: 2,
+          ),
+        )
+      ]);
+    });
+    // return Flex(
+    //     direction: Axis.horizontal,
+    //     children: [_menu, _list, Expanded(child: _detail)]);
     // return GNResponsive.getResponsive((GNMainViewSize s) {
     //   bool isShowMenu = true;
     //   bool isShowList = true;

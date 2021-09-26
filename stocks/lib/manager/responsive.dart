@@ -8,11 +8,13 @@ enum GNMainViewSize { big, middle, small }
 
 abstract class GNResponsiveProtocol {
   changeMainViewStatus(GNMainViewStatus status) {}
+  changeMainViewSize(GNMainViewSize size) {}
 }
 
 class GNResponsive {
   List<GNResponsiveProtocol> widgetDelegates = [];
   GNMainViewStatus nowMainViewStatus = GNMainViewStatus.standard;
+  GNMainViewSize nowSize = GNMainViewSize.big;
   static MediaQueryData? MQ;
   static double? Height;
   static double? Width;
@@ -69,6 +71,11 @@ class GNResponsive {
       if (Width! >= bigScreenWidth) {
         s = GNMainViewSize.big;
       }
+      if (GNResponsive().nowSize != s) {
+        GNResponsive().nowSize = s;
+        GNResponsive.changeMainViewSize();
+      }
+      
       return nowViewSizeCallback(s);
     });
   }
@@ -91,6 +98,18 @@ class GNResponsive {
       m.widgetDelegates.forEach((element) {
         if (element != null) {
           element.changeMainViewStatus(status);
+        }
+      });
+    }
+  }
+
+
+  static changeMainViewSize() {
+    GNResponsive m = GNResponsive();
+    if (m.widgetDelegates.length > 0) {
+      m.widgetDelegates.forEach((element) {
+        if (element != null) {
+          element.changeMainViewSize(m.nowSize);
         }
       });
     }

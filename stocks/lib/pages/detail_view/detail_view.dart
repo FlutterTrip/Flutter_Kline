@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:stocks/components/text/text.dart';
 import 'package:stocks/manager/exchange_manager.dart';
@@ -9,14 +11,13 @@ import 'package:stocks/components/chart/chart_view.dart';
 import 'package:stocks/components/chart/chart_models.dart';
 
 class DetailView extends StatefulWidget {
-  const DetailView({Key? key}) : super(key: key);
-
+  Pair? pair;
+  DetailView({Key? key, this.pair}) : super(key: key);
   @override
   _DetailViewState createState() => _DetailViewState();
 }
 
 class _DetailViewState extends State<DetailView> {
-  Pair? _pair;
   List<HqChartData> _chartData = [];
   late List<ChartBaseConfig> _configs;
   @override
@@ -44,36 +45,51 @@ class _DetailViewState extends State<DetailView> {
     VolChartConfig vConfig = VolChartConfig();
     vConfig.isAutoWidth = true;
     vConfig.maIndexTypes = [volMa5, volMa10];
-    
+
     _configs = [kConfig, vConfig];
 
-    GNPagesAction().registerAction(PageName.detail, FuncName.clickStock, widget,
-        (name, funcName, {data}) {
-      if (data != null && data.length > 0) {
-        Pair p = data[0];
-        setState(() {
-          _pair = p;
-          testData(p);
-        });
-      }
-    });
-
+    if (widget.pair != null) {
+      testData(widget.pair!);
+    }
     super.initState();
+  }
+
+  @override
+  dispose() {
+    print(" detail dispose");
+    // GNPagesAction().disposeAction(widget);
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(DetailView oldWidget) {
+    if (widget.pair != null) {
+      testData(widget.pair!);
+    }
+    super.didUpdateWidget(oldWidget);
   }
 
   testData(Pair pair) {
     HqNet.getAllHqData(ExchangeSymbol.BSC, pair).then((value) {
       // print(value);
-      setState(() {
-        _chartData = value;
-      });
+      if (this != null && widget != null && context != null) {
+        setState(() {
+          _chartData = value;
+        });
+      }
+      
     });
     // Net.get(APIManager.getApi(E, type))
   }
 
   @override
   Widget build(BuildContext context) {
+    Color bg = Colors.white;
+    if (Platform.isMacOS) {
+      bg = Colors.transparent;
+    }
     return Container(
+      color: bg,
       padding: EdgeInsets.only(top: 16),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -84,12 +100,12 @@ class _DetailViewState extends State<DetailView> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               GNText(
-                _pair != null ? _pair!.token0.symbol : '--',
+                widget.pair != null ? widget.pair!.token0.symbol : '--',
                 color: GNTheme().fontColorType(FontColorType.bright),
                 fontSize: GNTheme().fontSizeType(FontSizeType.lg),
               ),
               GNText(
-                _pair != null ? _pair!.token1.symbol : '--',
+                widget.pair != null ? widget.pair!.token1.symbol : '--',
                 color: GNTheme().fontColorType(FontColorType.gray),
                 fontSize: GNTheme().fontSizeType(FontSizeType.md),
               ),

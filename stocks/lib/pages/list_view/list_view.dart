@@ -4,6 +4,7 @@ import 'package:stocks/components/exchange_symbols/exchange_symbols.dart';
 import 'package:stocks/components/space/space.dart';
 import 'package:stocks/components/text/text.dart';
 import 'package:stocks/manager/exchange_manager.dart';
+import 'package:stocks/manager/responsive.dart';
 import 'package:stocks/manager/theme_manager.dart';
 import 'package:stocks/models/tokenModel.dart';
 import 'package:stocks/models/dataModel.dart';
@@ -41,6 +42,7 @@ class _FListViewState extends State<FListView> {
     });
 
     super.initState();
+    
   }
 
   _subscriptionData(ExchangeSymbol? _symbol) {
@@ -102,7 +104,7 @@ class _FListViewState extends State<FListView> {
     return Container(
         // color: GNTheme().getZDColor(ZDColorType.up),
         padding: EdgeInsets.only(top: 16, left: 8),
-        constraints: BoxConstraints(maxWidth: 220),
+        // constraints: BoxConstraints(minWidth: 220, maxWidth: 375),
         child: Stack(
           children: [
             Column(
@@ -276,7 +278,7 @@ class PairRowView extends StatelessWidget {
     return GKWrappedButton(
         onPressed: () {
           GNPagesAction()
-              .callAction(PageName.detail, FuncName.clickStock, data: [model]);
+              .callAction(PageName.main, FuncName.clickStock, data: [model]);
         },
         child: Row(
           children: [
