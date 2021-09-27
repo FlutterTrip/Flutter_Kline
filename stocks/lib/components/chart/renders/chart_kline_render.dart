@@ -105,21 +105,21 @@ class CandlePainter extends CustomPainter {
 
       int index = 0;
 
-      int p = offset % _paintWidth;
+      // int p = offset % _paintWidth;
 
-      int paintOffset = offset <= config.nowWidth ? offset : p;
-      if (paintOffset > config.nowWidth) {
-         p = paintOffset % config.nowWidth;
-        // paintOffset =
-        //     p <= config.nowWidth ~/ 2 + 2 ? p : config.nowWidth ~/ 2 + 2;
-        paintOffset = p;
-      }
+      // int paintOffset = offset <= config.nowWidth ? offset : p;
+      // if (paintOffset > config.nowWidth) {
+      //    p = paintOffset % config.nowWidth;
+      //   // paintOffset =
+      //   //     p <= config.nowWidth ~/ 2 + 2 ? p : config.nowWidth ~/ 2 + 2;
+      //   paintOffset = p;
+      // }
      
+      // // paintOffset += 2;
       
-      
-      print(paintOffset);
+      // print(paintOffset);
       _datas.forEach((element) {
-        PaintModel m = PaintModel(element, _config, paintOffset);
+        PaintModel m = PaintModel(element, _config, 0);
         m.maxValue = maxValue;
         m.minValue = minValue;
         m.sourceMaxValue = sourceMaxValue;

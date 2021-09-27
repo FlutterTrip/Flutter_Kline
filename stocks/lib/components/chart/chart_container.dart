@@ -76,7 +76,9 @@ class _ChartContainerState extends State<ChartContainer> {
   scrollControllerListener() {
     int offset = _scrollController.offset.toInt();
     if (offset >= 0 && _datas.length > 0 && widget.configs.length > 0) {
+      
       Object config = widget.configs[0];
+      
       Size? size = context.findRenderObject()?.paintBounds.size;
 
       int elementW = 0;
@@ -85,15 +87,20 @@ class _ChartContainerState extends State<ChartContainer> {
         elementW = config.nowWidth;
       }
 
+      if (offset % elementW < elementW * 0.4) {
+        print("无效渲染");
+        return;
+      }
+
       config as ChartBaseConfig;
 
       int width = size == null ? config.width : size.width.toInt();
       // int oneScreenNum = width ~/ elementW + 1;
-      // int oneScreenNum = (width / elementW).round();
-      int oneScreenNum = 30;
+      int oneScreenNum = (width / elementW).round();
+      // int oneScreenNum = 30;
       // oneScreenNum = (width / elementW) > oneScreenNum ? oneScreenNum + 1 : width ~/ elementW;
-      int rightNum = offset ~/ elementW;
-      // int rightNum = (offset / elementW).round();
+      // int rightNum = offset ~/ elementW;
+      int rightNum = (offset / elementW).round();
       int fromNum = rightNum + oneScreenNum;
       if (fromNum > _datas.length) {
         // 一个屏幕显示的数量超出总共的数量
