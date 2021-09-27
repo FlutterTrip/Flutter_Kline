@@ -7,9 +7,9 @@ class VolModel extends HqChartData {
   int index = 0;
   double maxValue = 0;
   double minValue = 0;
-  VolChartConfig config = VolChartConfig();
-  VolModel(HqChartData data, VolChartConfig _config) {
-    config = _config;
+  final VolChartConfig config;
+  VolModel(HqChartData data, this.config) {
+    // config = _config;
     time = data.time;
     exchangeSymbol = data.exchangeSymbol;
     symbol = data.symbol;

@@ -32,7 +32,7 @@ class ChartFontBaseConfig {
 class ChartElementBaseConfig {
   int minWidth = 10;
   int maxWidth = 20;
-  int nowWidth = 10;
+  int nowWidth = 20;
 }
 
 // 背景网格

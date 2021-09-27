@@ -57,7 +57,7 @@ class _Window extends State<Window> {
     return ChangeNotifierProvider(
       create: (_) => GNTheme(),
       child: MaterialApp(
-        color: bg,
+        // color: bg,
         theme: themeData,
         darkTheme: darkThemeData,
         title: 'Stocks',

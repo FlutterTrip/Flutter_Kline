@@ -10,9 +10,10 @@ class PaintModel extends HqChartData {
   double minValue = 0;
   double sourceMaxValue = 0;
   double sourceMinValue = 0;
-  KlineChartConfig config = KlineChartConfig();
-  PaintModel(HqChartData data, KlineChartConfig _config) {
-    config = _config;
+  int paintOffset = 0;
+  final KlineChartConfig config;
+  PaintModel(HqChartData data, this.config, this.paintOffset) {
+    // config = _config;
     time = data.time;
     exchangeSymbol = data.exchangeSymbol;
     symbol = data.symbol;
@@ -55,11 +56,11 @@ class PaintModel extends HqChartData {
   Point get point {
     num x = index * config.nowWidth;
     num y = convertY(max(double.parse(spj), double.parse(kpj)));
-    return Point(x, y);
+    return Point(x + paintOffset, y);
   }
 
   Point get linePoint {
-    return Point(index * config.nowWidth + config.nowWidth / 2,
+    return Point(index * config.nowWidth + config.nowWidth / 2 + paintOffset,
         convertY(double.parse(maxPrice)));
   }
 
@@ -73,9 +74,11 @@ class CandlePainter extends CustomPainter {
   List<PaintModel> _paintModels = [];
   HqChartData? _lastHqChartData;
   Offset? _nowPoint;
+  int _offset = 0;
 
   CandlePainter(List<HqChartData> _datas, KlineChartConfig _config,
-      HqChartData? _lastData, Offset? _nowP) {
+      HqChartData? _lastData, Offset? _nowP, int offset, int _paintWidth) {
+    _offset = offset;
     _lastHqChartData = _lastData;
     _nowPoint = _nowP;
     config = _config;
@@ -101,8 +104,22 @@ class CandlePainter extends CustomPainter {
       minValue -= pb;
 
       int index = 0;
+
+      int p = offset % _paintWidth;
+
+      int paintOffset = offset <= config.nowWidth ? offset : p;
+      if (paintOffset > config.nowWidth) {
+         p = paintOffset % config.nowWidth;
+        // paintOffset =
+        //     p <= config.nowWidth ~/ 2 + 2 ? p : config.nowWidth ~/ 2 + 2;
+        paintOffset = p;
+      }
+     
+      
+      
+      print(paintOffset);
       _datas.forEach((element) {
-        PaintModel m = PaintModel(element, _config);
+        PaintModel m = PaintModel(element, _config, paintOffset);
         m.maxValue = maxValue;
         m.minValue = minValue;
         m.sourceMaxValue = sourceMaxValue;

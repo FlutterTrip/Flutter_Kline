@@ -29,6 +29,8 @@ class _ChartContainerState extends State<ChartContainer> {
   double _offsetStartY = 0.0;
   int _scale = 1;
   int _scaleStart = 1;
+  int _offset = 0;
+  int _paintWidth = 0;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -86,8 +88,12 @@ class _ChartContainerState extends State<ChartContainer> {
       config as ChartBaseConfig;
 
       int width = size == null ? config.width : size.width.toInt();
-      int oneScreenNum = (width / elementW).round();
-      int rightNum = (offset / elementW).round();
+      // int oneScreenNum = width ~/ elementW + 1;
+      // int oneScreenNum = (width / elementW).round();
+      int oneScreenNum = 30;
+      // oneScreenNum = (width / elementW) > oneScreenNum ? oneScreenNum + 1 : width ~/ elementW;
+      int rightNum = offset ~/ elementW;
+      // int rightNum = (offset / elementW).round();
       int fromNum = rightNum + oneScreenNum;
       if (fromNum > _datas.length) {
         // 一个屏幕显示的数量超出总共的数量
@@ -155,6 +161,8 @@ class _ChartContainerState extends State<ChartContainer> {
 
         setState(() {
           _nowDisplayData = nowDisplay;
+          _offset = offset;
+          _paintWidth = width;
         });
       }
     }
@@ -170,7 +178,7 @@ class _ChartContainerState extends State<ChartContainer> {
               height: config.height.toDouble(),
             ),
             painter: CandlePainter(
-                _nowDisplayData, config, _lastHqData, _nowKlinePoint),
+                _nowDisplayData, config, _lastHqData, _nowKlinePoint, _offset, _paintWidth),
           );
 
         case ChartType.Vol:

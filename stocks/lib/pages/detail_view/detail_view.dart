@@ -63,10 +63,10 @@ class _DetailViewState extends State<DetailView> {
 
   @override
   void didUpdateWidget(DetailView oldWidget) {
+    super.didUpdateWidget(oldWidget);
     if (widget.pair != null) {
       testData(widget.pair!);
     }
-    super.didUpdateWidget(oldWidget);
   }
 
   testData(Pair pair) {
@@ -89,10 +89,13 @@ class _DetailViewState extends State<DetailView> {
     }
     return Container(
       color: bg,
+      constraints: BoxConstraints.expand(),
       child: SafeArea(
           child: Container(
         padding: EdgeInsets.only(top: 16),
-        child: SingleChildScrollView(child: Column(
+        child: SingleChildScrollView(
+          
+          child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
