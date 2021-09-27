@@ -1,11 +1,9 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:stocks/components/text/text.dart';
 import 'package:stocks/manager/exchange_manager.dart';
 import 'package:stocks/manager/theme_manager.dart';
 import 'package:stocks/models/tokenModel.dart';
-import 'package:stocks/pages/page_action.dart';
 import 'package:stocks/net/hq_net.dart';
 import 'package:stocks/components/chart/chart_view.dart';
 import 'package:stocks/components/chart/chart_models.dart';
@@ -54,6 +52,8 @@ class _DetailViewState extends State<DetailView> {
     super.initState();
   }
 
+  
+
   @override
   dispose() {
     print(" detail dispose");
@@ -92,7 +92,7 @@ class _DetailViewState extends State<DetailView> {
       child: SafeArea(
           child: Container(
         padding: EdgeInsets.only(top: 16),
-        child: Column(
+        child: SingleChildScrollView(child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -122,7 +122,7 @@ class _DetailViewState extends State<DetailView> {
               ],
             )
           ],
-        ),
+        ),)
       )),
     );
   }
