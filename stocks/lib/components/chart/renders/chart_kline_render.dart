@@ -46,20 +46,20 @@ class PaintModel extends HqChartData {
   }
 
   Size get size {
-    double width = config.minWidth.toDouble();
+    double width = config.nowWidth.toDouble();
     double t = (double.parse(kpj) - double.parse(spj)).abs();
     double height = convertH(t);
     return Size(width, height);
   }
 
   Point get point {
-    num x = index * config.minWidth;
+    num x = index * config.nowWidth;
     num y = convertY(max(double.parse(spj), double.parse(kpj)));
     return Point(x, y);
   }
 
   Point get linePoint {
-    return Point(index * config.minWidth + config.minWidth / 2,
+    return Point(index * config.nowWidth + config.nowWidth / 2,
         convertY(double.parse(maxPrice)));
   }
 

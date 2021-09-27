@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -21,7 +23,12 @@ class _ChartContainerState extends State<ChartContainer> {
   List<HqChartData> _datas = [];
   HqChartData? _lastHqData;
   Offset? _nowKlinePoint;
-  double _scaleLevel = 0;
+  double _offsetX = 0.0;
+  double _offsetY = 0.0;
+  double _offsetStartX = 0.0;
+  double _offsetStartY = 0.0;
+  int _scale = 1;
+  int _scaleStart = 1;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -208,23 +215,40 @@ class _ChartContainerState extends State<ChartContainer> {
           }
         },
         child: GestureDetector(
-          onScaleUpdate: (event) {
-            // print(event);
-            ChartBaseConfig config = widget.configs[0];
-            if (config.type == ChartType.Kline) {
-              config as KlineChartConfig;
-              int allLevel = config.maxWidth - config.minWidth;
-              int nowLevel = config.nowWidth - config.minWidth;
-              // _scaleLevel = nowLevel / allLevel;
-              
-              if (_scaleLevel <= 100) {
-                _scaleLevel += event.scale;
-              }
-              print("nowwidth: ${config.nowWidth} nowLevel: $nowLevel _scaleLevel: $_scaleLevel");
-            }
-            
+          onScaleStart: (details) {
+            _scaleStart = _scale;
+            _offsetStartX = _offsetX;
+            _offsetStartY = _offsetY;
           },
-          onLongPressDown: (event){
+          onScaleUpdate: (event) {
+            bool isNeedUpdateChart = false;
+            _updateNowWidth(config_) {
+              int allLevel = config_.maxWidth - config_.minWidth;
+
+              double scale =
+                  min(max(_scaleStart * event.scale, 1), allLevel * 1.0 + 1);
+              _scale = scale.toInt();
+              _offsetX = _offsetStartX + event.localFocalPoint.dx;
+              _offsetY = _offsetStartY + event.localFocalPoint.dy;
+              int temp = config_.minWidth + _scale - 1;
+              if (temp != config_.nowWidth) {
+                config_.nowWidth = temp;
+                isNeedUpdateChart = true;
+              }
+            }
+
+            widget.configs.forEach((config) {
+              if (config.type == ChartType.Kline ||
+                  config.type == ChartType.Vol) {
+                _updateNowWidth(config);
+              }
+            });
+            if (isNeedUpdateChart) {
+              scrollControllerListener();
+            }
+
+          },
+          onLongPressDown: (event) {
             setState(() {
               _nowKlinePoint = null;
             });
@@ -257,7 +281,7 @@ class _ChartContainerState extends State<ChartContainer> {
               }
             }
           },
-          onLongPressUp: (){
+          onLongPressUp: () {
             setState(() {
               _nowKlinePoint = null;
             });
