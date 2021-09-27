@@ -24,10 +24,14 @@ class _Window extends State<Window> {
 
   @override
   Widget build(BuildContext context) {
+    Color bg = Colors.white;
+    if (Platform.isMacOS) {
+      bg = Colors.transparent;
+    }
     ThemeData themeData = ThemeData(
         textSelectionTheme: TextSelectionThemeData(
             selectionColor: GNTheme().fontColorType(FontColorType.highlight)),
-        backgroundColor: Colors.transparent,
+        backgroundColor: bg,
         brightness: Brightness.light,
         buttonTheme: ButtonThemeData(
             minWidth: 0,
@@ -39,7 +43,7 @@ class _Window extends State<Window> {
     ThemeData darkThemeData = ThemeData(
         textSelectionTheme: TextSelectionThemeData(
             selectionColor: GNTheme().fontColorType(FontColorType.highlight)),
-        backgroundColor: Colors.transparent,
+        backgroundColor: bg,
         brightness: Brightness.dark,
         buttonTheme: ButtonThemeData(
             minWidth: 0,
@@ -48,14 +52,12 @@ class _Window extends State<Window> {
             padding: EdgeInsets.all(0),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(4))));
-    Color bg = Colors.white;
-    if (Platform.isMacOS) {
-      bg = Colors.transparent;
-    }
+    
     // nav.setZeroPage(Container(width: 300, height: 300, color: Colors.blue.withAlpha(0)));
     return ChangeNotifierProvider(
       create: (_) => GNTheme(),
       child: MaterialApp(
+        color: bg,
         theme: themeData,
         darkTheme: darkThemeData,
         title: 'Stocks',
