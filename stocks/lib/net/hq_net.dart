@@ -35,6 +35,7 @@ class HqNet {
   //   "28.46694368",      // 主动买入成交额10
   //   "17928899.62484339" // 请忽略该参数11
   // ]
+      int index = 0;
       obj.forEach((element) {
         HqChartData d = HqChartData();
         d.time = element[0];
@@ -44,7 +45,9 @@ class HqNet {
         d.maxPrice = element[2];
         d.minPrice = element[3];
         d.exchangeSymbol = symbol;
+        d.hqChartDataIndex = index;
         r.add(d);
+        index ++;
       });
       return r;
     }).catchError((error){

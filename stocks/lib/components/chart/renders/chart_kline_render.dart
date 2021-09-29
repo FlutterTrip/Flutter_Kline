@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:stocks/components/chart/chart_models.dart';
 import 'package:stocks/components/chart/chart_tools.dart';
@@ -10,9 +11,9 @@ class PaintModel extends HqChartData {
   double minValue = 0;
   double sourceMaxValue = 0;
   double sourceMinValue = 0;
-  int paintOffset = 0;
+  int renderOffset = 0;
   final KlineChartConfig config;
-  PaintModel(HqChartData data, this.config, this.paintOffset) {
+  PaintModel(HqChartData data, this.config, this.renderOffset) {
     // config = _config;
     time = data.time;
     exchangeSymbol = data.exchangeSymbol;
@@ -56,11 +57,11 @@ class PaintModel extends HqChartData {
   Point get point {
     num x = index * config.nowWidth;
     num y = convertY(max(double.parse(spj), double.parse(kpj)));
-    return Point(x + paintOffset, y);
+    return Point(x - renderOffset, y);
   }
 
   Point get linePoint {
-    return Point(index * config.nowWidth + config.nowWidth / 2 + paintOffset,
+    return Point(index * config.nowWidth + config.nowWidth / 2 - renderOffset,
         convertY(double.parse(maxPrice)));
   }
 
@@ -74,11 +75,9 @@ class CandlePainter extends CustomPainter {
   List<PaintModel> _paintModels = [];
   HqChartData? _lastHqChartData;
   Offset? _nowPoint;
-  int _offset = 0;
 
   CandlePainter(List<HqChartData> _datas, KlineChartConfig _config,
-      HqChartData? _lastData, Offset? _nowP, int offset, int _paintWidth) {
-    _offset = offset;
+      HqChartData? _lastData, Offset? _nowP, int _renderOffset) {
     _lastHqChartData = _lastData;
     _nowPoint = _nowP;
     config = _config;
@@ -104,22 +103,8 @@ class CandlePainter extends CustomPainter {
       minValue -= pb;
 
       int index = 0;
-
-      // int p = offset % _paintWidth;
-
-      // int paintOffset = offset <= config.nowWidth ? offset : p;
-      // if (paintOffset > config.nowWidth) {
-      //    p = paintOffset % config.nowWidth;
-      //   // paintOffset =
-      //   //     p <= config.nowWidth ~/ 2 + 2 ? p : config.nowWidth ~/ 2 + 2;
-      //   paintOffset = p;
-      // }
-     
-      // // paintOffset += 2;
-      
-      // print(paintOffset);
       _datas.forEach((element) {
-        PaintModel m = PaintModel(element, _config, 0);
+        PaintModel m = PaintModel(element, _config, _renderOffset);
         m.maxValue = maxValue;
         m.minValue = minValue;
         m.sourceMaxValue = sourceMaxValue;
@@ -365,7 +350,8 @@ class CandlePainter extends CustomPainter {
   @override
   paint(Canvas canvas, Size size) {
     Paint paint = Paint();
-
+    Rect rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    canvas.clipRect(rect);
     grid(canvas, size, paint);
     paint.strokeWidth = 1;
     PaintModel? selPaintModel = null;
@@ -414,6 +400,7 @@ class CandlePainter extends CustomPainter {
         }
       }
     });
+
 
     paintNowPrice(canvas, size, paint);
     paintCross(canvas, size, paint, selPaintModel);

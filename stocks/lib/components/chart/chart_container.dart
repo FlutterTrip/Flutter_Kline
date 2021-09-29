@@ -29,8 +29,7 @@ class _ChartContainerState extends State<ChartContainer> {
   double _offsetStartY = 0.0;
   int _scale = 1;
   int _scaleStart = 1;
-  int _offset = 0;
-  int _paintWidth = 0;
+  int _renderOffset = 0;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -86,16 +85,15 @@ class _ChartContainerState extends State<ChartContainer> {
         config as KlineChartConfig;
         elementW = config.nowWidth;
       }
-
       if (offset % elementW < elementW * 0.4) {
-        print("无效渲染");
+        // 无效渲染
         return;
       }
-
       config as ChartBaseConfig;
 
       int width = size == null ? config.width : size.width.toInt();
       // int oneScreenNum = width ~/ elementW + 1;
+      // 计算需要渲染的元素数据起始
       int oneScreenNum = (width / elementW).round();
       // int oneScreenNum = 30;
       // oneScreenNum = (width / elementW) > oneScreenNum ? oneScreenNum + 1 : width ~/ elementW;
@@ -119,6 +117,10 @@ class _ChartContainerState extends State<ChartContainer> {
         } else {
           nowDisplay = [..._datas.sublist(from, to)];
         }
+
+        // 计算渲染的元素坐标偏移量
+        int widthRight = (_scrollContentWidth - width - offset).toInt();
+        int renderOffsetTemp = widthRight - nowDisplay[0].hqChartDataIndex * elementW;
 
         widget.configs.forEach((config) {
           if (config.maIndexTypes.length > 0) {
@@ -168,8 +170,7 @@ class _ChartContainerState extends State<ChartContainer> {
 
         setState(() {
           _nowDisplayData = nowDisplay;
-          _offset = offset;
-          _paintWidth = width;
+          _renderOffset = renderOffsetTemp;
         });
       }
     }
@@ -185,7 +186,7 @@ class _ChartContainerState extends State<ChartContainer> {
               height: config.height.toDouble(),
             ),
             painter: CandlePainter(
-                _nowDisplayData, config, _lastHqData, _nowKlinePoint, _offset, _paintWidth),
+                _nowDisplayData, config, _lastHqData, _nowKlinePoint, _renderOffset),
           );
 
         case ChartType.Vol:
@@ -195,7 +196,7 @@ class _ChartContainerState extends State<ChartContainer> {
               color: Colors.transparent,
               height: config.height.toDouble(),
             ),
-            painter: VolPainter(_nowDisplayData, config),
+            painter: VolPainter(_nowDisplayData, config, _renderOffset),
           );
 
         default:

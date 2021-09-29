@@ -7,8 +7,9 @@ class VolModel extends HqChartData {
   int index = 0;
   double maxValue = 0;
   double minValue = 0;
+  int renderOffset = 0;
   final VolChartConfig config;
-  VolModel(HqChartData data, this.config) {
+  VolModel(HqChartData data, this.config, this.renderOffset) {
     // config = _config;
     time = data.time;
     exchangeSymbol = data.exchangeSymbol;
@@ -46,7 +47,7 @@ class VolModel extends HqChartData {
   Point get point {
     num x = index * config.nowWidth;
     num y = convertY(double.parse(cjl));
-    return Point(x, y);
+    return Point(x - renderOffset, y);
   }
 }
 
@@ -54,7 +55,7 @@ class VolPainter extends CustomPainter {
   late VolChartConfig config;
   List<VolModel> _paintModels = [];
 
-  VolPainter(List<HqChartData> _datas, VolChartConfig _config) {
+  VolPainter(List<HqChartData> _datas, VolChartConfig _config, int _renderOffset) {
     config = _config;
     if (_datas.length > 0) {
       List<double> nums = [];
@@ -76,7 +77,7 @@ class VolPainter extends CustomPainter {
 
       int index = 0;
       _datas.forEach((element) {
-        VolModel m = VolModel(element, _config);
+        VolModel m = VolModel(element, _config, _renderOffset);
         m.maxValue = maxValue;
         m.minValue = minValue;
         m.index = index;
@@ -107,6 +108,8 @@ class VolPainter extends CustomPainter {
   @override
   paint(Canvas canvas, Size size) {
     Paint paint = Paint();
+    Rect rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    canvas.clipRect(rect);
     paint.strokeWidth = 1;
     List<List<Offset>> maPoints = [];
     _paintModels.forEach((element) {

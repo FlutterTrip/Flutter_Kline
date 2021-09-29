@@ -15,6 +15,7 @@ class HqChartData extends HQData {
   bool isEmpty = false; // 是否为空模型，为 true 时候，为填充作用
   List<double> ma = []; // 数据下标对应着，配置里指数配置的下标
   List<double> cjlMa = [];
+  int hqChartDataIndex = 0; // 原始数据下标
 }
 
 // 基础元素绘制属性
@@ -32,7 +33,7 @@ class ChartFontBaseConfig {
 class ChartElementBaseConfig {
   int minWidth = 10;
   int maxWidth = 20;
-  int nowWidth = 20;
+  int nowWidth = 10;
 }
 
 // 背景网格
