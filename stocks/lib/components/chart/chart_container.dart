@@ -60,7 +60,7 @@ class _ChartContainerState extends State<ChartContainer> {
           _scrollContentWidth = _datas.length * config.nowWidth * 1.0;
         });
       }
-      scrollControllerListener();
+      scrollControllerListener(true);
     }
 
     super.didUpdateWidget(oldWidget);
@@ -72,7 +72,7 @@ class _ChartContainerState extends State<ChartContainer> {
     super.dispose();
   }
 
-  scrollControllerListener() {
+  scrollControllerListener([bool isForceRender = false]) {
     int offset = _scrollController.offset.toInt();
     if (offset >= 0 && _datas.length > 0 && widget.configs.length > 0) {
       
@@ -85,7 +85,7 @@ class _ChartContainerState extends State<ChartContainer> {
         config as KlineChartConfig;
         elementW = config.nowWidth;
       }
-      if (offset % elementW < elementW * 0.4) {
+      if (offset % elementW <= 2 && !isForceRender) {
         // 无效渲染
         return;
       }
