@@ -85,13 +85,14 @@ class _ChartContainerState extends State<ChartContainer> {
         config as KlineChartConfig;
         elementW = config.nowWidth;
       }
-      if (offset % elementW <= 2 && !isForceRender) {
-        // 无效渲染
-        return;
-      }
+      
       config as ChartBaseConfig;
 
       int width = size == null ? config.width : size.width.toInt();
+      if (offset % elementW <= 2 && !isForceRender && offset <= _scrollContentWidth - width - elementW && offset > elementW) {
+        // 剔除无效渲染
+        return;
+      }
       // int oneScreenNum = width ~/ elementW + 1;
       // 计算需要渲染的元素数据起始
       int oneScreenNum = (width / elementW).round();
