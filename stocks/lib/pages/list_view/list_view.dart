@@ -238,18 +238,11 @@ class PairRowView extends StatelessWidget {
     List<Widget> r = [];
 
     model.hqDatas.forEach((element) {
-      ExchangeModel? exchange =
-          ExchangeManager.getExchangeModel(element.exchangeSymbol);
       r.add(Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            exchange!.logo!.length > 0
-                ? Image.network(
-                    exchange.logo!,
-                    width: GNTheme().fontSizeType(FontSizeType.s),
-                  )
-                : GNText("${exchange.name}"),
+            ExchangeSymbols([element.exchangeSymbol]),
             Row(
               children: [
                 ZDAnimation(

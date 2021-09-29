@@ -26,6 +26,12 @@ class ExchangeSymbols extends StatelessWidget {
               exchange.logo!,
               width: GNTheme().fontSizeType(FontSizeType.s),
               loadingBuilder: (context, o, s) {
+                if (s == null) {
+                  return Padding(
+                    padding: EdgeInsets.only(right: 2, top: 2),
+                    child: o,
+                  );
+                }
                 return text;
               },
               errorBuilder: (context, o, s) {
