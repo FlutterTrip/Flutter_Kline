@@ -5,6 +5,7 @@ import 'package:stocks/pages/list_view/list_view.dart';
 import 'package:stocks/manager/symbols_manager.dart';
 import 'package:stocks/pages/detail_view/detail_view.dart';
 import 'package:stocks/pages/page_action.dart';
+import 'package:stocks/pages/test/test.dart';
 import '../../manager/responsive.dart';
 import '../../manager/method_channel_manger.dart';
 import '../../nav/nav.dart';
@@ -19,6 +20,7 @@ class _MainPageState extends State<MainPage>
   late Widget _menu;
   late Widget _list;
   late Widget _detail;
+  int _nowSel = 0;
   GNMainViewStatus _mainViewStatus = GNMainViewStatus.standard;
   GNMainViewSize? _nowSize;
   Pair? _detailPair;
@@ -26,12 +28,25 @@ class _MainPageState extends State<MainPage>
   void initState() {
     GNResponsive.registerDelegate(this);
     _list = FListView();
-    _menu = MenuView();
+    _menu = MenuView(_nowSel);
     loadData();
     SymbolsManager.instance();
     GNPagesAction()
         .registerAction(PageName.main, FuncName.clickStock, widget, clickStock);
+    GNPagesAction()
+        .registerAction(PageName.main, FuncName.clickMenu, widget, clickMenu);
     super.initState();
+  }
+
+  clickMenu(PageName name, FuncName funcName, {List<dynamic>? data}) {
+    if (data != null && data.length > 0) {
+      int nowSel = data[0];
+      if (_nowSel != nowSel) {
+        setState(() {
+          _nowSel = nowSel;
+        });
+      }
+    }
   }
 
   clickStock(PageName name, FuncName funcName, {List<dynamic>? data}) {
@@ -42,9 +57,8 @@ class _MainPageState extends State<MainPage>
         // testData(p);
       });
       if (_nowSize != null && _nowSize == GNMainViewSize.small) {
-         Nav().push(DetailView(pair: p));
+        Nav().push(DetailView(pair: p));
       }
-     
     }
   }
 
@@ -86,17 +100,27 @@ class _MainPageState extends State<MainPage>
           visible: GNMainViewSize.big == s,
           child: _menu,
         ),
-        Expanded(
-          child: _list,
-          flex: GNMainViewSize.big == s ? 1 : 2,
-        ),
         Visibility(
-          visible: GNMainViewSize.big == s || GNMainViewSize.middle == s,
-          child: Expanded(
-            child: DetailView(pair: _detailPair),
-            flex: 2,
-          ),
-        )
+            visible: _nowSel == 0,
+            child: Expanded(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _list,
+                    flex: GNMainViewSize.big == s ? 1 : 2,
+                  ),
+                  Visibility(
+                    visible:
+                        GNMainViewSize.big == s || GNMainViewSize.middle == s,
+                    child: Expanded(
+                      child: DetailView(pair: _detailPair),
+                      flex: 2,
+                    ),
+                  )
+                ],
+              ),
+            )),
+        Visibility(visible: _nowSel == 1, child: Expanded(child: TestView()))
       ]);
     });
     // return Flex(

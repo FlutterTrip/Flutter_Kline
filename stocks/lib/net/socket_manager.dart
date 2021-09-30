@@ -35,7 +35,8 @@ class SubscriptionParm {
   void Function(dynamic)? subscriptionerFunc;
   void Function(dynamic)? onErrorFunc;
   void Function()? onSuccFunc;
-  List<Pair> pairs = [Pair()];
+  void Function()? onDone;
+  List<Pair> pairs = [];
   String? otherParm;
   SubscriptionParm(this.symbol, this.type, this.pairs, this.name,
       {this.action = SubscriptionAction.subscription,
@@ -93,25 +94,33 @@ class SocketManager {
     return _instance!;
   }
 
-  subscription(SubscriptionParm parm, void Function(dynamic) onData,
-      {void Function()? onSucc,
-      void Function(dynamic error)? onError,
-      void Function(SubscriptionParm)? onDone}) {
+  subscription(SubscriptionParm parm, 
+  // void Function(dynamic) onData,
+      // {void Function()? onSucc,
+      // void Function(dynamic error)? onError,
+      // void Function(SubscriptionParm)? onDone}
+      ) {
     Adapter? a = Adapter.getAdapterWith(parm.symbol);
     assert(a != null);
-    parm.subscriptionerFunc = onData;
-    parm.onErrorFunc = (error) {
-      print(error);
-      if (onError != null) {
-        onError(error);
-      }
-    };
-    parm.onSuccFunc = onSucc;
+    // parm.subscriptionerFunc = onData;
+    // parm.onErrorFunc = (error) {
+    //   print(error);
+    //   if (onError != null) {
+    //     onError(error);
+    //   }
+    // };
+    // parm.onSuccFunc = onSucc;
+    // parm.onDone = (parm) {
+      
+    //   if (onDone != null) {
+    //     onDone(parm);
+    //   }
+    // };
     this._startSocket(parm, () {
       print('${parm.symbol} onDone');
       socketMap[parm.symbol] = null;
-      if (onDone != null) {
-        onDone(parm);
+      if (parm.onDone != null) {
+        parm.onDone!();
       }
     });
 
@@ -122,7 +131,6 @@ class SocketManager {
       [void Function()? onSucc, void Function(dynamic error)? onError]) {
     Adapter? a = Adapter.getAdapterWith(parm.symbol);
     assert(a != null);
-    this._sendMessage(parm.symbol, a!.unsubscription(parm));
     socketMap.forEach((key, value) {
       if (parm.symbol == key && value != null) {
         value.subscriptionerParm.forEach((key2, value2) {
@@ -139,9 +147,13 @@ class SocketManager {
                 value2.remove(obj);
               });
             }
+            print("unsubscription ${parm.symbol}");
             // if (value2.length == 0) {
             //   value.socket.close();
             // }
+            if (parm.pairs.length > 0) {
+              this._sendMessage(parm.symbol, a!.unsubscription(parm));
+            }
           }
         });
       }

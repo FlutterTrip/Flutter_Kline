@@ -21,6 +21,7 @@ class FListView extends StatefulWidget {
 class _FListViewState extends State<FListView> {
   List<RowModel> datas = [];
   String name = "";
+  Map<ExchangeSymbol, SubscriptionParm?> _parmMap = {};
   @override
   void initState() {
     // print("initState");
@@ -56,10 +57,10 @@ class _FListViewState extends State<FListView> {
         }
       });
       if (datas_.length > 0) {
-        sm.subscription(
-            SubscriptionParm(
-                symbol, SubscriptionType.baseHQ, datas_, "FListView", id: 66),
-            (message) {
+        SubscriptionParm parm = _parmMap[symbol] ??  SubscriptionParm(
+                symbol, SubscriptionType.baseHQ, datas_, "FListView", id: 66);
+        parm.pairs = datas_;
+        parm.subscriptionerFunc = (message) {
           BaseHQData d = message as BaseHQData;
           setState(() {
             datas.forEach((element) {
@@ -68,9 +69,11 @@ class _FListViewState extends State<FListView> {
               }
             });
           });
-        }, onDone: (parm) {
+        };
+        parm.onDone = () {
           _subscriptionData(parm.symbol);
-        });
+        };
+        sm.subscription(parm);
       }
     }
 
@@ -93,10 +96,16 @@ class _FListViewState extends State<FListView> {
 
   @override
   void dispose() {
-    // print('dispose');
-    // SocketManager.instance().unsubscription(SubscriptionParm(ExchangeSymbol.BSC, SubscriptionType.baseHQ, datas, "FListView",
-    //         id: 66));
     super.dispose();
+    print('dispose');
+    ExchangeManager.exchanges.forEach((symbol, element) {
+      SubscriptionParm? p = _parmMap[symbol];
+      if (p != null) {
+        SocketManager.instance().unsubscription(p);
+      }
+    });
+    _parmMap = {};
+    datas = [];
   }
 
   @override
@@ -185,8 +194,8 @@ class _ZDAnimationState extends State<ZDAnimation>
 
   @override
   void dispose() {
-    super.dispose();
     _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -285,11 +294,11 @@ class PairRowView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     GNText(
-                      model.token0.symbol,
+                      model.token0.symbol.toUpperCase(),
                       color: GNTheme().fontColorType(FontColorType.bright),
                     ),
                     GNText(
-                      model.token1.symbol,
+                      model.token1.symbol.toUpperCase(),
                       color: GNTheme().fontColorType(FontColorType.gray),
                       fontSize: GNTheme().fontSizeType(FontSizeType.xs),
                     ),

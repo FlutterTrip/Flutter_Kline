@@ -192,7 +192,7 @@ class HBAdapter extends Adapter {
       parm.pairs.forEach((pair) {
         String symbol = pair.symbol.toLowerCase();
         streamNameWithParm.add(JsonEncoder()
-            .convert({"unsub": "market.$symbol.ticker", "id": parm.id}));
+            .convert({"unsub": "market.$symbol.ticker"}));
       });
       return streamNameWithParm;
     }
