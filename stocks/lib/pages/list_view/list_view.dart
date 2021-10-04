@@ -50,12 +50,11 @@ class _FListViewState extends State<FListView> with SocketProtocal {
     super.initState();
 
     SocketManager.registerDelegate(this);
-    SocketManager.addSubscriptionParm(this, [
+    SocketManager.subscription(this, [
       SubscriptionParm(
           ExchangeSymbol.BSC, SubscriptionType.baseHQ, datas, "FListView",
           id: 66)
     ]);
-    SocketManager.socketStart(this);
   }
 
   @override
@@ -70,47 +69,47 @@ class _FListViewState extends State<FListView> with SocketProtocal {
     });
   }
 
-  _subscriptionData(ExchangeSymbol? _symbol) {
-    SocketManager sm = SocketManager.instance();
+  // _subscriptionData(ExchangeSymbol? _symbol) {
+  //   SocketManager sm = SocketManager.instance();
 
-    _subscriptionDataWithSymbol(ExchangeSymbol symbol) {
-      List<RowModel> datas_ = [];
-      datas.forEach((e) {
-        if (e.exchangeSymbol.indexOf(symbol) >= 0) {
-          datas_.add(e);
-        }
-      });
-      if (datas_.length > 0) {
-        SubscriptionParm parm = _parmMap[symbol] ??
-            SubscriptionParm(
-                symbol, SubscriptionType.baseHQ, datas_, "FListView",
-                id: 66);
-        parm.pairs = datas_;
-        parm.subscriptionerFunc = (message) {
-          BaseHQData d = message as BaseHQData;
-          setState(() {
-            datas.forEach((element) {
-              if (element.symbol == d.symbol) {
-                element.updateData(d);
-              }
-            });
-          });
-        };
-        parm.onDone = () {
-          _subscriptionData(parm.symbol);
-        };
-        sm.subscription(parm);
-      }
-    }
+  //   _subscriptionDataWithSymbol(ExchangeSymbol symbol) {
+  //     List<RowModel> datas_ = [];
+  //     datas.forEach((e) {
+  //       if (e.exchangeSymbol.indexOf(symbol) >= 0) {
+  //         datas_.add(e);
+  //       }
+  //     });
+  //     if (datas_.length > 0) {
+  //       SubscriptionParm parm = _parmMap[symbol] ??
+  //           SubscriptionParm(
+  //               symbol, SubscriptionType.baseHQ, datas_, "FListView",
+  //               id: 66);
+  //       parm.pairs = datas_;
+  //       parm.subscriptionerFunc = (message) {
+  //         BaseHQData d = message as BaseHQData;
+  //         setState(() {
+  //           datas.forEach((element) {
+  //             if (element.symbol == d.symbol) {
+  //               element.updateData(d);
+  //             }
+  //           });
+  //         });
+  //       };
+  //       parm.onDone = () {
+  //         _subscriptionData(parm.symbol);
+  //       };
+  //       sm.subscription(parm);
+  //     }
+  //   }
 
-    if (_symbol == null) {
-      ExchangeManager.exchanges.forEach((symbol, element) {
-        _subscriptionDataWithSymbol(symbol);
-      });
-    } else {
-      _subscriptionDataWithSymbol(_symbol);
-    }
-  }
+  //   if (_symbol == null) {
+  //     ExchangeManager.exchanges.forEach((symbol, element) {
+  //       _subscriptionDataWithSymbol(symbol);
+  //     });
+  //   } else {
+  //     _subscriptionDataWithSymbol(_symbol);
+  //   }
+  // }
 
   List<PairRowView> getPairRowViews() {
     List<PairRowView> t = [];
@@ -122,9 +121,10 @@ class _FListViewState extends State<FListView> with SocketProtocal {
 
   @override
   void dispose() {
-    super.dispose();
     print('dispose');
     SocketManager.disposeDelegate(this);
+    super.dispose();
+  
     // ExchangeManager.exchanges.forEach((symbol, element) {
     //   SubscriptionParm? p = _parmMap[symbol];
     //   if (p != null) {
@@ -182,7 +182,7 @@ class _FListViewState extends State<FListView> with SocketProtocal {
                     GKSearch(onSelected: (Pair onSel) {
                       setState(() {
                         this.datas.add(RowModel(onSel));
-                        SocketManager.updateSubscriptionParm(this, [
+                        SocketManager.subscription(this, [
                           SubscriptionParm(ExchangeSymbol.BSC,
                               SubscriptionType.baseHQ, datas, "FListView",
                               id: 66)

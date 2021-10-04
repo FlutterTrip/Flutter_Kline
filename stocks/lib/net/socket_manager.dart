@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:stocks/components/exchange_symbols/exchange_symbols.dart';
@@ -34,52 +35,22 @@ class SubscriptionParm {
   ExchangeSymbol symbol;
   SubscriptionAction? action;
   SubscriptionType type = SubscriptionType.baseHQ;
-  void Function(dynamic)? subscriptionerFunc;
-  void Function(dynamic)? onErrorFunc;
-  void Function()? onSuccFunc;
-  void Function()? onDone;
   List<Pair> pairs = [];
   String? otherParm;
   SubscriptionParm(this.symbol, this.type, this.pairs, this.name,
       {this.action = SubscriptionAction.subscription,
       this.otherParm = "",
       this.id = 1});
+  copy() {
+    return SubscriptionParm(this.symbol, this.type, [...this.pairs], this.name,
+        action: this.action, otherParm: this.otherParm, id: this.id);
+  }
 }
 
 class _SocketInfo {
   late _Socket socket;
   late ExchangeSymbol symbol;
-  Adapter? adapter;
-  Map<SubscriptionType, List<SubscriptionParm>> subscriptionerParm = {};
-  onData(dynamic message) {
-    message = adapter!.gzip(message);
-    message = adapter!.pingPong(socket, message);
-
-    assert(adapter != null);
-    SubscriptionType? key = adapter!.filterDataType(message);
-    if (this.subscriptionerParm.keys.length > 0 && key != null) {
-      List<SubscriptionParm>? funcs = this.subscriptionerParm[key];
-      if (funcs != null && funcs.length > 0) {
-        funcs.forEach((parm) {
-          void Function(dynamic) element = parm.subscriptionerFunc!;
-          switch (key) {
-            case SubscriptionType.HQ:
-              element(adapter!.parseHQ(message));
-              break;
-            case SubscriptionType.baseHQ:
-              element(adapter!.parseBaseHQ(message));
-              break;
-            case SubscriptionType.kline:
-              element(adapter!.parseKline(message));
-              break;
-            default:
-              element(message);
-              break;
-          }
-        });
-      }
-    }
-  }
+  late Adapter? adapter;
 }
 
 mixin SocketProtocal {
@@ -90,97 +61,207 @@ mixin SocketProtocal {
 
 class SocketManager {
   Map<ExchangeSymbol, _SocketInfo?> socketMap = {};
-  Map<SocketProtocal, List<SubscriptionParm>?> delegateMap = {};
-  Map<SocketProtocal, Map<SubscriptionType, List<String>?>?> subTypeKeyMap = {};
+  Map<SocketProtocal, Map<SubscriptionType, SubscriptionParm?>?> delegateMap =
+      {};
+  Map<SubscriptionType, Map<ExchangeSymbol, Map<String, int>?>?>
+      subTypeKeysNum = {};
   static SocketManager? _instance;
 
   SocketManager._();
 
   static registerDelegate(SocketProtocal widget) {
     if (SocketManager.instance().delegateMap[widget] == null) {
-      SocketManager.instance().delegateMap[widget] = [];
+      SocketManager.instance().delegateMap[widget] = {};
     }
   }
 
-  static addSubscriptionParm(
-      SocketProtocal widget, List<SubscriptionParm> parms) {
-    if (SocketManager.instance().delegateMap[widget] == null) {
-      SocketManager.instance().delegateMap[widget] = [];
-    }
-    List<SubscriptionParm> parmsTemp =
-        SocketManager.instance().delegateMap[widget] ?? [];
-    SocketManager.instance().delegateMap[widget] = [...parmsTemp, ...parms];
+  static subscription(SocketProtocal widget, List<SubscriptionParm> parms) {
     SocketManager m = SocketManager.instance();
-    m._updateSubTypeKeyMap(widget, parms);
-  }
-
-  _updateSubTypeKeyMap(SocketProtocal widget, List<SubscriptionParm> parms) {
-    parms.forEach((parm) {
-      if (this.subTypeKeyMap[widget] == null) {
-        this.subTypeKeyMap[widget] = {};
-      }
-      if (this.subTypeKeyMap[widget]![parm.type] == null) {
-        this.subTypeKeyMap[widget]![parm.type] = [];
-      }
-      List<String> pairs = [];
-      List<String> pairsTemp = this.subTypeKeyMap[widget]![parm.type]!;
-      parm.pairs.forEach((element) {
-        if (pairsTemp.indexOf(element.symbol) < 0) {
-          pairs.add(element.symbol);
-        }
-      });
-      this.subTypeKeyMap[widget]![parm.type]!.addAll(pairs);
-    });
-  }
-
-  static updateSubscriptionParm(
-      SocketProtocal widget, List<SubscriptionParm> parms) {
-    List<SubscriptionParm> parmsTemp =
-        SocketManager.instance().delegateMap[widget] ?? [];
-    if (parmsTemp.length == 0) {
-      SocketManager.addSubscriptionParm(widget, parms);
-      return;
+    if (m.delegateMap[widget] == null) {
+      m.delegateMap[widget] = {};
     }
-    List<SubscriptionParm> needUpdate = [];
-    parmsTemp.forEach((element) {
-      parms.forEach((newParm) {
-        if (newParm.type == element.type) {
-          needUpdate.add(element);
+    // List<SubscriptionParm> parmsTemp = m.delegateMap[widget] ?? [];
+    // List<SubscriptionParm> newParms = [...parmsTemp, ...parms];
+    Map<SubscriptionType, SubscriptionParm> t = {};
+    parms.forEach((element) {
+      t[element.type] = element;
+    });
+    m.delegateMap[widget] = t;
+    SocketManager.socketStart(widget);
+    // m._updateSubTypeKeyMap(widget);
+    m._updateSubTypeKeysNum();
+  }
+
+  static unsubscription(SocketProtocal widget,
+      [List<SubscriptionParm>? parms]) {
+    SocketManager m = SocketManager.instance();
+    List<SubscriptionParm> parmsTemp = parms ?? [];
+    if (parms == null) {
+      m.delegateMap[widget]?.forEach((key, value) {
+        if (value != null) {
+          parmsTemp.add(value.copy());
+        }
+      });
+    }
+    if (parmsTemp.length > 0) {
+      parmsTemp.forEach((unsubparm) {
+        SubscriptionParm? subParm = m.delegateMap[widget]![unsubparm.type];
+        if (subParm != null) {
+          List<Pair> needDel = [];
+          subParm.pairs.forEach((element) {
+            unsubparm.pairs.forEach((unelement) {
+              if (element.symbol == unelement.symbol) {
+                needDel.add(element);
+              }
+            });
+          });
+          needDel.forEach((element) {
+            subParm.pairs.remove(element);
+          });
+        }
+      });
+      m._updateSubTypeKeysNum();
+
+      parmsTemp.forEach((unsubparm) {
+        List<Pair> needUnsub = [];
+        unsubparm.pairs.forEach((pair) {
+          if (m.subTypeKeysNum[unsubparm.type] != null) {
+            if (m.subTypeKeysNum[unsubparm.type]![unsubparm.symbol] != null) {
+              if (m.subTypeKeysNum[unsubparm.type]![unsubparm.symbol]![
+                          pair.symbol] ==
+                      null ||
+                  m.subTypeKeysNum[unsubparm.type]![unsubparm.symbol]![
+                          pair.symbol]! <=
+                      0) {
+                needUnsub.add(pair);
+              }
+            } else {
+              needUnsub.add(pair);
+            }
+          } else {
+            needUnsub.add(pair);
+          }
+        });
+        if (needUnsub.length > 0) {
+          needUnsub.forEach((element) {
+            element.exchangeSymbol.forEach((symbol) {
+              Adapter? a = m.socketMap[symbol]!.adapter;
+              unsubparm.pairs = needUnsub;
+              m._sendMessage(symbol, a!.unsubscription(unsubparm));
+            });
+          });
+        }
+      });
+    }
+  }
+
+  // _updateSubTypeKeyMap(SocketProtocal widget) {
+  // List<SubscriptionParm> parms = this.delegateMap[widget] ?? [];
+  // parms.forEach((parm) {
+  //   if (this.subTypeKeyMap[widget] == null) {
+  //     this.subTypeKeyMap[widget] = {};
+  //   }
+  //   if (this.subTypeKeyMap[widget]![parm.type] == null) {
+  //     this.subTypeKeyMap[widget]![parm.type] = [];
+  //   }
+  //   List<Pair> pairs = [];
+  //   List<Pair> pairsTemp = this.subTypeKeyMap[widget]![parm.type]!;
+  //   parm.pairs.forEach((element) {
+  //     if (pairsTemp.indexOf(element.symbol) < 0) {
+  //       pairs.add(element.symbol);
+  //     }
+  //   });
+  //   List<String> newPairs = [...pairsTemp, ...pairs];
+  //   this.subTypeKeyMap[widget]![parm.type] = newPairs;
+
+  // if (this.subTypeKeysNum[parm.type] == null) {
+  //   this.subTypeKeysNum[parm.type] = {};
+  // }
+  // newPairs.forEach((element) {
+  //   if (this.subTypeKeysNum[parm.type]![element] == null) {
+  //     this.subTypeKeysNum[parm.type]![element] = 0;
+  //   }
+  //   this.subTypeKeysNum[parm.type]![element] = this.subTypeKeysNum[parm.type]![element]! + 1;
+  // });
+
+  // });
+  //  _updateSubTypeKeysNum();
+  // }
+
+  _updateSubTypeKeysNum() {
+    this.subTypeKeysNum = {};
+    this.delegateMap.forEach((widget, parmMap) {
+      parmMap?.forEach((type, parm) {
+        if (this.subTypeKeysNum[type] == null) {
+          this.subTypeKeysNum[type] = {};
+        }
+        if (parm != null) {
+          parm.pairs.forEach((pair) {
+            pair.exchangeSymbol.forEach((symbol) {
+              if (this.subTypeKeysNum[type]![symbol] == null) {
+                this.subTypeKeysNum[type]![symbol] = {};
+              }
+              if (this.subTypeKeysNum[type]![symbol]![pair.symbol] == null) {
+                this.subTypeKeysNum[type]![symbol]![pair.symbol] = 0;
+              }
+              this.subTypeKeysNum[type]![symbol]![pair.symbol] =
+                  this.subTypeKeysNum[type]![symbol]![pair.symbol]! + 1;
+            });
+          });
         }
       });
     });
-    needUpdate.forEach((element) {
-      parmsTemp.remove(element);
-    });
-    parmsTemp = [...parms, ...parmsTemp];
-    SocketManager.instance().delegateMap[widget] = parmsTemp;
-    SocketManager.instance()._updateSubTypeKeyMap(widget, parmsTemp);
-    SocketManager.socketStart(widget);
   }
+
+  // static updateSubscriptionParm(
+  //     SocketProtocal widget, List<SubscriptionParm> parms) {
+  //   SocketManager m = SocketManager.instance();
+  //   List<SubscriptionParm> parmsTemp = m.delegateMap[widget] ?? [];
+  //   if (parmsTemp.length == 0) {
+  //     SocketManager.addSubscriptionParm(widget, parms);
+  //     return;
+  //   }
+  //   List<SubscriptionParm> needUpdate = [];
+  //   parmsTemp.forEach((element) {
+  //     parms.forEach((newParm) {
+  //       if (newParm.type == element.type) {
+  //         needUpdate.add(element);
+  //       }
+  //     });
+  //   });
+  //   needUpdate.forEach((element) {
+  //     parmsTemp.remove(element);
+  //   });
+  //   parmsTemp = [...parms, ...parmsTemp];
+  //   m.delegateMap[widget] = parmsTemp;
+  //   m._updateSubTypeKeyMap(widget);
+  //   SocketManager.socketStart(widget);
+  // }
 
   static disposeDelegate(SocketProtocal widget) {
+    SocketManager.unsubscription(widget);
     SocketManager.instance().delegateMap.remove(widget);
   }
 
   static socketStart(SocketProtocal widget) {
     SocketManager m = SocketManager.instance();
-    m.delegateMap[widget]?.forEach((parm) {
-      Map<ExchangeSymbol, List<Pair>> l = {};
-      parm.pairs.forEach((pair) {
-        pair.exchangeSymbol.forEach((ex) {
-          if (l[ex] == null) {
-            l[ex] = [];
-          }
-          l[ex]!.add(pair);
+    m.delegateMap[widget]?.forEach((type, parm) {
+      if (parm != null) {
+        Map<ExchangeSymbol, List<Pair>> l = {};
+        parm.pairs.forEach((pair) {
+          pair.exchangeSymbol.forEach((ex) {
+            if (l[ex] == null) {
+              l[ex] = [];
+            }
+            l[ex]!.add(pair);
+          });
         });
-      });
 
-      l.forEach((symbol, value) {
-        m._startSocketT(symbol);
-        Adapter? a = Adapter.getAdapterWith(symbol);
-        assert(a != null);
-        m._sendMessage(symbol, a!.subscription(parm));
-      });
+        l.forEach((symbol, value) {
+          _SocketInfo s = m._startSocket(symbol);
+          m._sendMessage(symbol, s.adapter!.subscription(parm));
+        });
+      }
     });
   }
 
@@ -190,73 +271,6 @@ class SocketManager {
       HttpOverrides.global = ProxyHttpOverrides();
     }
     return _instance!;
-  }
-
-  subscription(
-    SubscriptionParm parm,
-    // void Function(dynamic) onData,
-    // {void Function()? onSucc,
-    // void Function(dynamic error)? onError,
-    // void Function(SubscriptionParm)? onDone}
-  ) {
-    Adapter? a = Adapter.getAdapterWith(parm.symbol);
-    assert(a != null);
-    // parm.subscriptionerFunc = onData;
-    // parm.onErrorFunc = (error) {
-    //   print(error);
-    //   if (onError != null) {
-    //     onError(error);
-    //   }
-    // };
-    // parm.onSuccFunc = onSucc;
-    // parm.onDone = (parm) {
-
-    //   if (onDone != null) {
-    //     onDone(parm);
-    //   }
-    // };
-    this._startSocket(parm, () {
-      print('${parm.symbol} onDone');
-      socketMap[parm.symbol] = null;
-      if (parm.onDone != null) {
-        parm.onDone!();
-      }
-    });
-
-    this._sendMessage(parm.symbol, a!.subscription(parm));
-  }
-
-  unsubscription(SubscriptionParm parm,
-      [void Function()? onSucc, void Function(dynamic error)? onError]) {
-    Adapter? a = Adapter.getAdapterWith(parm.symbol);
-    assert(a != null);
-    socketMap.forEach((key, value) {
-      if (parm.symbol == key && value != null) {
-        value.subscriptionerParm.forEach((key2, value2) {
-          if (key2 == parm.type) {
-            List<SubscriptionParm> delObj = [];
-            for (var i = 0; i < value2.length; i++) {
-              SubscriptionParm element = value2[i];
-              if (element.name == parm.name) {
-                delObj.add(element);
-              }
-            }
-            if (delObj.length > 0) {
-              delObj.forEach((obj) {
-                value2.remove(obj);
-              });
-            }
-            print("unsubscription ${parm.symbol}");
-            // if (value2.length == 0) {
-            //   value.socket.close();
-            // }
-            if (parm.pairs.length > 0) {
-              this._sendMessage(parm.symbol, a!.unsubscription(parm));
-            }
-          }
-        });
-      }
-    });
   }
 
   _SocketInfo initSocket(ExchangeSymbol symbol) {
@@ -269,7 +283,7 @@ class SocketManager {
     return r;
   }
 
-  _startSocketT(ExchangeSymbol symbol) {
+  _SocketInfo _startSocket(ExchangeSymbol symbol) {
     _SocketInfo? s = socketMap[symbol];
     if (s == null) {
       s = initSocket(symbol);
@@ -279,6 +293,7 @@ class SocketManager {
       s.socket.start((message) => _onData(s!, message),
           (message) => _onError(s!, message), () => _onDone(s!));
     }
+    return s;
   }
 
   _onDone(_SocketInfo socketInfo) {
@@ -290,7 +305,6 @@ class SocketManager {
   }
 
   _onData(_SocketInfo socketInfo, dynamic message) {
-    // print(socketInfo.symbol);
     Adapter? adapter = socketInfo.adapter;
     assert(adapter != null);
     message = adapter!.gzip(message);
@@ -298,11 +312,12 @@ class SocketManager {
     SubscriptionType? type = adapter.filterDataType(message);
 
     if (this.delegateMap.keys.length > 0 && type != null) {
+      //  print("${socketInfo.symbol} $message");
       List<SocketProtocal> widgets = [];
       this.delegateMap.forEach((key, value) {
-        if (value != null && value.length > 0) {
-          value.forEach((element) {
-            if (element.type == type && widgets.indexOf(key) < 0) {
+        if (value != null && value.keys.length > 0) {
+          value.forEach((type_, parm_) {
+            if (type_ == type && widgets.indexOf(key) < 0) {
               widgets.add(key);
             }
           });
@@ -310,9 +325,14 @@ class SocketManager {
       });
 
       widgets.forEach((widget) {
-        List<String> subKeys = this.subTypeKeyMap[widget]?[type] ?? [];
+        // List<String> subKeys = this.subTypeKeyMap[widget]?[type] ?? [];
+        List<Pair> pairs = this.delegateMap[widget]![type]!.pairs;
+        List<String> subKeys = [];
+        pairs.forEach((element) {
+          subKeys.add(element.symbol);
+        });
         BaseHQData? data;
-        if (subKeys.length > 0) {
+        if (pairs.length > 0) {
           switch (type) {
             case SubscriptionType.HQ:
               data = adapter.parseHQ(message);
@@ -337,38 +357,6 @@ class SocketManager {
 
   _onError(_SocketInfo socketInfo, dynamic message) {}
 
-  _startSocket(SubscriptionParm parm, void Function() ondone) {
-    ExchangeSymbol symbol = parm.symbol;
-    _SocketInfo? s = socketMap[symbol];
-    if (s == null) {
-      s = initSocket(symbol);
-      socketMap[symbol] = s;
-    }
-    if (s.socket.channel?.innerWebSocket == null) {
-      s.socket.start(s.onData, parm.onErrorFunc, ondone);
-    }
-
-    List<SubscriptionParm>? parms = s.subscriptionerParm[parm.type];
-    if (parms == null) {
-      parms = [];
-    }
-    // 做一次清理，删除重复的
-    List<SubscriptionParm> delObj = [];
-    for (var i = 0; i < parms.length; i++) {
-      SubscriptionParm element = parms[i];
-      if (element.name == parm.name) {
-        delObj.add(element);
-      }
-    }
-    if (parms.length > 0 && delObj.length > 0) {
-      delObj.forEach((element) {
-        parms!.remove(element);
-      });
-    }
-    parms.add(parm);
-    s.subscriptionerParm[parm.type] = parms;
-  }
-
   _sendMessage(ExchangeSymbol symbol, dynamic message) {
     _SocketInfo? s = socketMap[symbol];
     s!.socket.send(message);
@@ -381,10 +369,110 @@ class SocketManager {
       socketMap[symbol] = null;
     }
   }
+
+  // _startSocket(SubscriptionParm parm, void Function() ondone) {
+  //   ExchangeSymbol symbol = parm.symbol;
+  //   _SocketInfo? s = socketMap[symbol];
+  //   if (s == null) {
+  //     s = initSocket(symbol);
+  //     socketMap[symbol] = s;
+  //   }
+  //   if (s.socket.channel?.innerWebSocket == null) {
+  //     s.socket.start(s.onData, parm.onErrorFunc, ondone);
+  //   }
+
+  //   List<SubscriptionParm>? parms = s.subscriptionerParm[parm.type];
+  //   if (parms == null) {
+  //     parms = [];
+  //   }
+  //   // 做一次清理，删除重复的
+  //   List<SubscriptionParm> delObj = [];
+  //   for (var i = 0; i < parms.length; i++) {
+  //     SubscriptionParm element = parms[i];
+  //     if (element.name == parm.name) {
+  //       delObj.add(element);
+  //     }
+  //   }
+  //   if (parms.length > 0 && delObj.length > 0) {
+  //     delObj.forEach((element) {
+  //       parms!.remove(element);
+  //     });
+  //   }
+  //   parms.add(parm);
+  //   s.subscriptionerParm[parm.type] = parms;
+  // }
+
+  // subscription(
+  //   SubscriptionParm parm,
+  //   // void Function(dynamic) onData,
+  //   // {void Function()? onSucc,
+  //   // void Function(dynamic error)? onError,
+  //   // void Function(SubscriptionParm)? onDone}
+  // ) {
+  //   Adapter? a = Adapter.getAdapterWith(parm.symbol);
+  //   assert(a != null);
+  //   // parm.subscriptionerFunc = onData;
+  //   // parm.onErrorFunc = (error) {
+  //   //   print(error);
+  //   //   if (onError != null) {
+  //   //     onError(error);
+  //   //   }
+  //   // };
+  //   // parm.onSuccFunc = onSucc;
+  //   // parm.onDone = (parm) {
+
+  //   //   if (onDone != null) {
+  //   //     onDone(parm);
+  //   //   }
+  //   // };
+  //   this._startSocket(parm, () {
+  //     print('${parm.symbol} onDone');
+  //     socketMap[parm.symbol] = null;
+  //     if (parm.onDone != null) {
+  //       parm.onDone!();
+  //     }
+  //   });
+
+  //   this._sendMessage(parm.symbol, a!.subscription(parm));
+  // }
+
+  // unsubscription(SubscriptionParm parm,
+  //     [void Function()? onSucc, void Function(dynamic error)? onError]) {
+  //   Adapter? a = Adapter.getAdapterWith(parm.symbol);
+  //   assert(a != null);
+  //   socketMap.forEach((key, value) {
+  //     if (parm.symbol == key && value != null) {
+  //       value.subscriptionerParm.forEach((key2, value2) {
+  //         if (key2 == parm.type) {
+  //           List<SubscriptionParm> delObj = [];
+  //           for (var i = 0; i < value2.length; i++) {
+  //             SubscriptionParm element = value2[i];
+  //             if (element.name == parm.name) {
+  //               delObj.add(element);
+  //             }
+  //           }
+  //           if (delObj.length > 0) {
+  //             delObj.forEach((obj) {
+  //               value2.remove(obj);
+  //             });
+  //           }
+  //           print("unsubscription ${parm.symbol}");
+  //           // if (value2.length == 0) {
+  //           //   value.socket.close();
+  //           // }
+  //           if (parm.pairs.length > 0) {
+  //             this._sendMessage(parm.symbol, a!.unsubscription(parm));
+  //           }
+  //         }
+  //       });
+  //     }
+  //   });
+  // }
 }
 
 class _Socket {
   IOWebSocketChannel? channel;
+  StreamSubscription? stream;
   _Socket(String url) {
     this.channel = IOWebSocketChannel.connect(url);
   }
@@ -393,18 +481,21 @@ class _Socket {
       void Function()? onDone) {
     if (this.channel != null) {
       // if (this.channel.stream. != status.abnormalClosure)
-      this.channel!.stream.listen((message) {
-        onData(message);
-      }, onError: (error) {
-        if (onError != null) {
-          onError(error);
-        }
-        print(error);
-      }, onDone: () {
-        if (onDone != null) {
-          onDone();
-        }
-      });
+      // this.channel!.stream.
+      if (this.stream == null) {
+        this.stream = this.channel!.stream.listen((message) {
+          onData(message);
+        }, onError: (error) {
+          if (onError != null) {
+            onError(error);
+          }
+          print(error);
+        }, onDone: () {
+          if (onDone != null) {
+            onDone();
+          }
+        });
+      }
     }
   }
 

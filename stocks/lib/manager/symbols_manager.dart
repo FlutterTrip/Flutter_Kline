@@ -23,17 +23,18 @@ class SymbolsManager {
 
   SymbolsManager._();
 
-  static Function debounceS = GNTools().debounce((str, result) {
+  Function _debounceS = GNTools().debounce((str, result) {
     SymbolsManager m = SymbolsManager.instance();
     result(m._search(str));
   }, 500);
 
   static search(String str, Function(List<Pair>) result) {
-    debounceS([str, result]);
+    SymbolsManager.instance()._debounceS([str, result]);
   }
 
   List<Pair> _search(String str) {
     String searchStr = str.toLowerCase().trim();
+    print("_search $str ${pairsMap.keys.length}");
     if (searchStr == "") {
       return [];
     }

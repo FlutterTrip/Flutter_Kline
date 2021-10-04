@@ -104,12 +104,12 @@ class _DetailViewState extends State<DetailView> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 GNText(
-                  widget.pair != null ? widget.pair!.token0.symbol : '--',
+                  widget.pair != null ? widget.pair!.token0.symbol.toUpperCase() : '--',
                   color: GNTheme().fontColorType(FontColorType.bright),
                   fontSize: GNTheme().fontSizeType(FontSizeType.lg),
                 ),
                 GNText(
-                  widget.pair != null ? widget.pair!.token1.symbol : '--',
+                  widget.pair != null ? widget.pair!.token1.symbol.toUpperCase() : '--',
                   color: GNTheme().fontColorType(FontColorType.gray),
                   fontSize: GNTheme().fontSizeType(FontSizeType.md),
                 ),
