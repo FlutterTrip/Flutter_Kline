@@ -93,4 +93,4 @@ class HQData extends BaseHQData {}
 //     "B": "123456"   // 忽略此参数
 //   }
 // }
-class KLineData {}
+class KLineData extends BaseHQData {}

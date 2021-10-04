@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:stocks/components/exchange_symbols/exchange_symbols.dart';
+import 'package:stocks/models/dataModel.dart';
 import 'package:stocks/models/tokenModel.dart';
 import 'package:stocks/net/api_manager.dart';
 import 'package:stocks/net/net_adapter.dart';
@@ -46,7 +48,7 @@ class SubscriptionParm {
 
 class _SocketInfo {
   late _Socket socket;
-  ExchangeSymbol? symbol;
+  late ExchangeSymbol symbol;
   Adapter? adapter;
   Map<SubscriptionType, List<SubscriptionParm>> subscriptionerParm = {};
   onData(dynamic message) {
@@ -80,11 +82,107 @@ class _SocketInfo {
   }
 }
 
+mixin SocketProtocal {
+  onData(dynamic message) {}
+  onDone(ExchangeSymbol symbol) {}
+  onError() {}
+}
+
 class SocketManager {
   Map<ExchangeSymbol, _SocketInfo?> socketMap = {};
+  Map<SocketProtocal, List<SubscriptionParm>?> delegateMap = {};
+  Map<SocketProtocal, Map<SubscriptionType, List<String>?>?> subTypeKeyMap = {};
   static SocketManager? _instance;
 
   SocketManager._();
+
+  static registerDelegate(SocketProtocal widget) {
+    if (SocketManager.instance().delegateMap[widget] == null) {
+      SocketManager.instance().delegateMap[widget] = [];
+    }
+  }
+
+  static addSubscriptionParm(
+      SocketProtocal widget, List<SubscriptionParm> parms) {
+    if (SocketManager.instance().delegateMap[widget] == null) {
+      SocketManager.instance().delegateMap[widget] = [];
+    }
+    List<SubscriptionParm> parmsTemp =
+        SocketManager.instance().delegateMap[widget] ?? [];
+    SocketManager.instance().delegateMap[widget] = [...parmsTemp, ...parms];
+    SocketManager m = SocketManager.instance();
+    m._updateSubTypeKeyMap(widget, parms);
+  }
+
+  _updateSubTypeKeyMap(SocketProtocal widget, List<SubscriptionParm> parms) {
+    parms.forEach((parm) {
+      if (this.subTypeKeyMap[widget] == null) {
+        this.subTypeKeyMap[widget] = {};
+      }
+      if (this.subTypeKeyMap[widget]![parm.type] == null) {
+        this.subTypeKeyMap[widget]![parm.type] = [];
+      }
+      List<String> pairs = [];
+      List<String> pairsTemp = this.subTypeKeyMap[widget]![parm.type]!;
+      parm.pairs.forEach((element) {
+        if (pairsTemp.indexOf(element.symbol) < 0) {
+          pairs.add(element.symbol);
+        }
+      });
+      this.subTypeKeyMap[widget]![parm.type]!.addAll(pairs);
+    });
+  }
+
+  static updateSubscriptionParm(
+      SocketProtocal widget, List<SubscriptionParm> parms) {
+    List<SubscriptionParm> parmsTemp =
+        SocketManager.instance().delegateMap[widget] ?? [];
+    if (parmsTemp.length == 0) {
+      SocketManager.addSubscriptionParm(widget, parms);
+      return;
+    }
+    List<SubscriptionParm> needUpdate = [];
+    parmsTemp.forEach((element) {
+      parms.forEach((newParm) {
+        if (newParm.type == element.type) {
+          needUpdate.add(element);
+        }
+      });
+    });
+    needUpdate.forEach((element) {
+      parmsTemp.remove(element);
+    });
+    parmsTemp = [...parms, ...parmsTemp];
+    SocketManager.instance().delegateMap[widget] = parmsTemp;
+    SocketManager.instance()._updateSubTypeKeyMap(widget, parmsTemp);
+    SocketManager.socketStart(widget);
+  }
+
+  static disposeDelegate(SocketProtocal widget) {
+    SocketManager.instance().delegateMap.remove(widget);
+  }
+
+  static socketStart(SocketProtocal widget) {
+    SocketManager m = SocketManager.instance();
+    m.delegateMap[widget]?.forEach((parm) {
+      Map<ExchangeSymbol, List<Pair>> l = {};
+      parm.pairs.forEach((pair) {
+        pair.exchangeSymbol.forEach((ex) {
+          if (l[ex] == null) {
+            l[ex] = [];
+          }
+          l[ex]!.add(pair);
+        });
+      });
+
+      l.forEach((symbol, value) {
+        m._startSocketT(symbol);
+        Adapter? a = Adapter.getAdapterWith(symbol);
+        assert(a != null);
+        m._sendMessage(symbol, a!.subscription(parm));
+      });
+    });
+  }
 
   static SocketManager instance() {
     if (_instance == null) {
@@ -94,12 +192,13 @@ class SocketManager {
     return _instance!;
   }
 
-  subscription(SubscriptionParm parm, 
-  // void Function(dynamic) onData,
-      // {void Function()? onSucc,
-      // void Function(dynamic error)? onError,
-      // void Function(SubscriptionParm)? onDone}
-      ) {
+  subscription(
+    SubscriptionParm parm,
+    // void Function(dynamic) onData,
+    // {void Function()? onSucc,
+    // void Function(dynamic error)? onError,
+    // void Function(SubscriptionParm)? onDone}
+  ) {
     Adapter? a = Adapter.getAdapterWith(parm.symbol);
     assert(a != null);
     // parm.subscriptionerFunc = onData;
@@ -111,7 +210,7 @@ class SocketManager {
     // };
     // parm.onSuccFunc = onSucc;
     // parm.onDone = (parm) {
-      
+
     //   if (onDone != null) {
     //     onDone(parm);
     //   }
@@ -169,6 +268,74 @@ class SocketManager {
     r.adapter = Adapter.getAdapterWith(symbol);
     return r;
   }
+
+  _startSocketT(ExchangeSymbol symbol) {
+    _SocketInfo? s = socketMap[symbol];
+    if (s == null) {
+      s = initSocket(symbol);
+      socketMap[symbol] = s;
+    }
+    if (s.socket.channel?.innerWebSocket == null) {
+      s.socket.start((message) => _onData(s!, message),
+          (message) => _onError(s!, message), () => _onDone(s!));
+    }
+  }
+
+  _onDone(_SocketInfo socketInfo) {
+    if (this.delegateMap.keys.length > 0) {
+      this.delegateMap.forEach((key, value) {
+        key.onDone(socketInfo.symbol);
+      });
+    }
+  }
+
+  _onData(_SocketInfo socketInfo, dynamic message) {
+    // print(socketInfo.symbol);
+    Adapter? adapter = socketInfo.adapter;
+    assert(adapter != null);
+    message = adapter!.gzip(message);
+    message = adapter.pingPong(socketInfo.socket, message);
+    SubscriptionType? type = adapter.filterDataType(message);
+
+    if (this.delegateMap.keys.length > 0 && type != null) {
+      List<SocketProtocal> widgets = [];
+      this.delegateMap.forEach((key, value) {
+        if (value != null && value.length > 0) {
+          value.forEach((element) {
+            if (element.type == type && widgets.indexOf(key) < 0) {
+              widgets.add(key);
+            }
+          });
+        }
+      });
+
+      widgets.forEach((widget) {
+        List<String> subKeys = this.subTypeKeyMap[widget]?[type] ?? [];
+        BaseHQData? data;
+        if (subKeys.length > 0) {
+          switch (type) {
+            case SubscriptionType.HQ:
+              data = adapter.parseHQ(message);
+              break;
+            case SubscriptionType.baseHQ:
+              data = adapter.parseBaseHQ(message);
+              break;
+            case SubscriptionType.kline:
+              data = adapter.parseKline(message);
+              break;
+            default:
+              break;
+          }
+
+          if (data != null && subKeys.indexOf(data.symbol) >= 0) {
+            widget.onData(data);
+          }
+        }
+      });
+    }
+  }
+
+  _onError(_SocketInfo socketInfo, dynamic message) {}
 
   _startSocket(SubscriptionParm parm, void Function() ondone) {
     ExchangeSymbol symbol = parm.symbol;

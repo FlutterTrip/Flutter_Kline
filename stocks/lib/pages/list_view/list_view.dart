@@ -18,7 +18,7 @@ class FListView extends StatefulWidget {
   _FListViewState createState() => _FListViewState();
 }
 
-class _FListViewState extends State<FListView> {
+class _FListViewState extends State<FListView> with SocketProtocal {
   List<RowModel> datas = [];
   String name = "";
   Map<ExchangeSymbol, SubscriptionParm?> _parmMap = {};
@@ -28,22 +28,46 @@ class _FListViewState extends State<FListView> {
     List<RowModel> _data = [];
     [
       // "HT/USDT",
-      // "DOGE/USDT", "BNB/USDT", "FTM/USDT", "SOL/USDT", "EOS/USDT", "CELR/USDT", "BTC/USDT", "ETH/USDT"
+      "DOGE/USDT",
+      //"BNB/USDT", "FTM/USDT", "SOL/USDT", "EOS/USDT", "CELR/USDT", "BTC/USDT", "ETH/USDT"
     ].forEach((element) {
       RowModel m = RowModel();
       List arr = element.split('/');
       m.token0 = Token(arr[0], arr[0]);
       m.token1 = Token(arr[1], arr[1]);
-      m.exchangeSymbol = [ExchangeSymbol.HB];
+      m.exchangeSymbol = [
+        ExchangeSymbol.HB,
+        ExchangeSymbol.BSC,
+        ExchangeSymbol.OK
+      ];
       _data.add(m);
     });
     setState(() {
       datas = _data;
-      _subscriptionData(null);
+      // _subscriptionData(null);
     });
 
     super.initState();
-    
+
+    SocketManager.registerDelegate(this);
+    SocketManager.addSubscriptionParm(this, [
+      SubscriptionParm(
+          ExchangeSymbol.BSC, SubscriptionType.baseHQ, datas, "FListView",
+          id: 66)
+    ]);
+    SocketManager.socketStart(this);
+  }
+
+  @override
+  onData(dynamic data) {
+    data as BaseHQData;
+    setState(() {
+      datas.forEach((element) {
+        if (element.symbol == data.symbol) {
+          element.updateData(data);
+        }
+      });
+    });
   }
 
   _subscriptionData(ExchangeSymbol? _symbol) {
@@ -57,8 +81,10 @@ class _FListViewState extends State<FListView> {
         }
       });
       if (datas_.length > 0) {
-        SubscriptionParm parm = _parmMap[symbol] ??  SubscriptionParm(
-                symbol, SubscriptionType.baseHQ, datas_, "FListView", id: 66);
+        SubscriptionParm parm = _parmMap[symbol] ??
+            SubscriptionParm(
+                symbol, SubscriptionType.baseHQ, datas_, "FListView",
+                id: 66);
         parm.pairs = datas_;
         parm.subscriptionerFunc = (message) {
           BaseHQData d = message as BaseHQData;
@@ -98,14 +124,15 @@ class _FListViewState extends State<FListView> {
   void dispose() {
     super.dispose();
     print('dispose');
-    ExchangeManager.exchanges.forEach((symbol, element) {
-      SubscriptionParm? p = _parmMap[symbol];
-      if (p != null) {
-        SocketManager.instance().unsubscription(p);
-      }
-    });
-    _parmMap = {};
-    datas = [];
+    SocketManager.disposeDelegate(this);
+    // ExchangeManager.exchanges.forEach((symbol, element) {
+    //   SubscriptionParm? p = _parmMap[symbol];
+    //   if (p != null) {
+    //     SocketManager.instance().unsubscription(p);
+    //   }
+    // });
+    // _parmMap = {};
+    // datas = [];
   }
 
   @override
@@ -155,7 +182,11 @@ class _FListViewState extends State<FListView> {
                     GKSearch(onSelected: (Pair onSel) {
                       setState(() {
                         this.datas.add(RowModel(onSel));
-                        _subscriptionData(null);
+                        SocketManager.updateSubscriptionParm(this, [
+                          SubscriptionParm(ExchangeSymbol.BSC,
+                              SubscriptionType.baseHQ, datas, "FListView",
+                              id: 66)
+                        ]);
                       });
                     }).show();
                   },
