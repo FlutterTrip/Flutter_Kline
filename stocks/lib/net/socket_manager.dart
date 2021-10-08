@@ -198,21 +198,35 @@ class SocketManager {
 
   Function _debounceClose = GNTools().debounce((symbols) {
     SocketManager m = SocketManager.instance();
-    symbols as List<ExchangeSymbol>;
-    symbols.forEach((symbol) {
-      _SocketInfo? si = m.socketMap[symbol];
-      if (si != null) {
-        si.socket.close();
-        si.status = -1;
-        m.willCloseSocketMap[symbol] = si;
-        m.socketMap.remove(symbol);
-        print("$symbol close");
+    if (m.willCloseSocketMap.keys.length == 0) {
+      print("cancel close pipe");
+    }
+    m.willCloseSocketMap.forEach((key, value) {
+      if (value != null) {
+        value.socket.close();
+        value.status = -1;
+        m.socketMap.remove(key);
+        print("$key close");
       }
     });
+    // symbols as List<ExchangeSymbol>;
+    // symbols.forEach((symbol) {
+    //   _SocketInfo? si = m.socketMap[symbol];
+    //   if (si != null) {
+    //     si.socket.close();
+    //     si.status = -1;
+    //     m.willCloseSocketMap[symbol] = si;
+    //     m.socketMap.remove(symbol);
+    //     print("$symbol close");
+    //   }
+    // });
   }, 5000);
 
   _closeSocket(List<ExchangeSymbol> symbols) {
     print("5s $symbols need close");
+    symbols.forEach((element) {
+      this.willCloseSocketMap[element] = this.socketMap[element];
+    });
     this._debounceClose([symbols]);
   }
 
@@ -346,6 +360,7 @@ class SocketManager {
 
   _SocketInfo _startSocket(ExchangeSymbol symbol) {
     _SocketInfo? s = socketMap[symbol];
+    this.willCloseSocketMap.remove(symbol);
     if (s == null) {
       s = initSocket(symbol);
       socketMap[symbol] = s;
