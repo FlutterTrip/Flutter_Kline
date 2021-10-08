@@ -16,8 +16,8 @@ websocket
 
 ## Screenshot
 
-![main](./res/1.png)
-![search](./res/2.png)
+![main](./preview/1.png)
+![search](./preview/2.png)
 
 ## Start
 
@@ -53,3 +53,14 @@ lib/net/net_adapter.dart
 
 不要运行 web 平台，因为没有适配，可能会发生一些莫名其妙 bug
 no run web
+
+## Hope to help you
+
+如代码有迷糊行为请吐槽，谢谢
+
+### 要不请我喝杯奶茶胖死我 😜
+
+<div>
+<img src="./preview/wechat-m.jpeg" width = "300" alt=""/>
+<img src="./preview/ali.jpg" width = "300" alt=""/>
+</div>
