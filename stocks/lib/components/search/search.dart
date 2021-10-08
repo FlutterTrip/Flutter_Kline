@@ -17,10 +17,31 @@ class GKSearchView extends StatefulWidget {
   _GKSearchViewState createState() => _GKSearchViewState(this.onSelected);
 }
 
-class _GKSearchViewState extends State<GKSearchView> {
-  List<Pair> result = [];
+class _GKSearchViewState extends State<GKSearchView>
+    with SymbolsSearchProtocal {
+  List<Pair> _result = [];
   String searchStr = "";
   void Function(Pair)? _onSelected;
+
+  @override
+  void initState() {
+    super.initState();
+    SymbolsManager.registerDelegate(this);
+  }
+
+  @override
+  void dispose() {
+    SymbolsManager.disposeDelegate(this);
+    super.dispose();
+  }
+
+  @override
+  result(List<Pair> list) {
+    setState(() {
+      _result = list;
+    });
+  }
+
   _GKSearchViewState(this._onSelected);
   List<Widget> getExchangeLogo(Pair pair) {
     List<Widget> r = [];
@@ -33,7 +54,10 @@ class _GKSearchViewState extends State<GKSearchView> {
                 exchange.logo!,
                 width: GNTheme().fontSizeType(FontSizeType.s),
                 loadingBuilder: (context, o, s) {
-                  return GNText("${exchange.name} ", color: exchange.mainColor,);
+                  return GNText(
+                    "${exchange.name} ",
+                    color: exchange.mainColor,
+                  );
                 },
                 errorBuilder: (context, o, s) {
                   return GNText("${exchange.name} ", color: exchange.mainColor);
@@ -47,7 +71,7 @@ class _GKSearchViewState extends State<GKSearchView> {
 
   List<Widget> getRow() {
     List<Widget> r = [];
-    result.forEach((element) {
+    _result.forEach((element) {
       r.add(GKWrappedButton(
         onPressed: () {
           this._onSelected!(element);
@@ -119,16 +143,17 @@ class _GKSearchViewState extends State<GKSearchView> {
                 searchStr = value;
                 if (value == "") {
                   setState(() {
-                    result = [];
+                    _result = [];
                   });
                 } else {
-                  SymbolsManager.search(value, (List<Pair> r) {
-                    if (searchStr != "") {
-                      setState(() {
-                        result = r;
-                      });
-                    }
-                  });
+                  SymbolsManager.searchWithWidget(this, searchStr);
+                  // SymbolsManager.search(value, (List<Pair> r) {
+                  //   if (searchStr != "") {
+                  //     setState(() {
+                  //       _result = r;
+                  //     });
+                  //   }
+                  // });
                 }
               },
               cursorColor: theme.fontColorType(FontColorType.bright),

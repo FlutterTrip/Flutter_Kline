@@ -5,10 +5,15 @@ import 'package:stocks/net/api_manager.dart';
 import 'package:stocks/net/http.dart';
 import 'package:stocks/tools/tools.dart';
 
+mixin SymbolsSearchProtocal {
+  result(List<Pair> pair) {}
+}
+
 class SymbolsManager {
   Map<String, Pair> pairsMap = {};
   Map<String, List<String>> searchTemp = {};
   Function? debounceSearch;
+  Map<SymbolsSearchProtocal, String> delegateMap = {};
   static SymbolsManager? _instance;
 
   static SymbolsManager instance() {
@@ -27,6 +32,29 @@ class SymbolsManager {
     SymbolsManager m = SymbolsManager.instance();
     result(m._search(str));
   }, 500);
+
+  static registerDelegate(SymbolsSearchProtocal widget) {
+    SymbolsManager.instance().delegateMap[widget] = "";
+  }
+
+  static disposeDelegate(SymbolsSearchProtocal widget) {
+    SymbolsManager.instance().delegateMap.remove(widget);
+  }
+
+  static searchWithWidget(SymbolsSearchProtocal widget, String str) {
+    SymbolsManager m = SymbolsManager.instance();
+    if (m.delegateMap[widget] != null) {
+      m.delegateMap[widget] = str;
+      m._debounceS([
+        str,
+        (List<Pair> pair) {
+          if (widget != null) {
+            widget.result(pair);
+          }
+        }
+      ]);
+    }
+  }
 
   static search(String str, Function(List<Pair>) result) {
     SymbolsManager.instance()._debounceS([str, result]);
