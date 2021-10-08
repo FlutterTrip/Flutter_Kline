@@ -343,7 +343,9 @@ class SocketManager {
   static SocketManager instance() {
     if (_instance == null) {
       _instance = SocketManager._();
-      HttpOverrides.global = ProxyHttpOverrides();
+      if (http_proxy.length > 0 && https_proxy.length > 0) {
+        HttpOverrides.global = ProxyHttpOverrides();
+      }
     }
     return _instance!;
   }

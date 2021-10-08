@@ -2,9 +2,6 @@
 
 Flutter KLine Chart
 
-[![中文](https://img.shields.io/badge/Lang-Chinese-red.svg
-)](./README.zh-CN.md)
-
 ## Desc
 
 Tokens kline
@@ -24,23 +21,25 @@ websocket
 
 ## Start
 
-__Recommend: Mac OS > iOS > Android__
+推荐运行在 Mac os 平台，其次 iOS，Android
 
 ## Attention
 
-### China
+### 大陆
 
-set Proxy:
+默认设置了本地代理，由于不可描述原因，需要代理，科学上网
+
+set Proxy:  设置代理
 
 lib/net/net_adapter.dart
  - http_proxy default: 127.0.0.1:7890
  - https_proxy default: 127.0.0.1:7890
 
-close proxy:
+close proxy: 关闭代理
 
 lib/net/net_adapter.dart
- - http_proxy = ""
- - https_proxy = ""
+ - http_proxy = ""  // 给空字符串
+ - https_proxy = "" // 给空字符串
 
 ### Other Region
 
@@ -52,4 +51,5 @@ lib/net/net_adapter.dart
 
 ## Warning
 
+不要运行 web 平台，因为没有适配，可能会发生一些莫名其妙 bug
 no run web

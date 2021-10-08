@@ -18,13 +18,15 @@ class Net {
   static Net instance() {
     if (_instance == null) {
       _instance = Net._();
-      if (!kIsWeb) {
-        (_instance!.dio.httpClientAdapter as DefaultHttpClientAdapter)
-            .onHttpClientCreate = (client) {
-          client.findProxy = (uri) {
-            return "PROXY $http_proxy";
+      if (http_proxy.length > 0 && https_proxy.length > 0) {
+        if (!kIsWeb) {
+          (_instance!.dio.httpClientAdapter as DefaultHttpClientAdapter)
+              .onHttpClientCreate = (client) {
+            client.findProxy = (uri) {
+              return "PROXY $http_proxy";
+            };
           };
-        };
+        }
       }
     }
     return _instance!;
