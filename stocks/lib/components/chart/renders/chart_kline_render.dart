@@ -83,18 +83,22 @@ class CandlePainter extends CustomPainter {
     config = _config;
     if (_datas.length > 0) {
       List<double> nums = [];
+      List<double> priceNums = [];
       _datas.forEach((element) {
         if (!element.isEmpty) {
           nums.add(double.parse(element.maxPrice));
           nums.add(double.parse(element.minPrice));
           nums = [...nums, ...element.ma];
+
+          priceNums.add(double.parse(element.maxPrice));
+          priceNums.add(double.parse(element.minPrice));
         }
       });
 
       double maxValue = nums.reduce(max);
       double minValue = nums.reduce(min);
-      double sourceMaxValue = maxValue;
-      double sourceMinValue = minValue;
+      double sourceMaxValue = priceNums.reduce(max);
+      double sourceMinValue = priceNums.reduce(min);
 
       double pt = (config.paddingTop / config.height) * (maxValue - minValue);
       double pb =
