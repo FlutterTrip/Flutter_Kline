@@ -6,6 +6,7 @@ import 'package:stocks/models/dataModel.dart';
 import 'package:stocks/models/tokenModel.dart';
 import 'package:stocks/net/api_manager.dart';
 import 'package:stocks/net/net_adapter.dart';
+import 'package:stocks/tools/tools.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status;
 import 'package:stocks/manager/exchange_manager.dart';
@@ -51,6 +52,7 @@ class _SocketInfo {
   late _Socket socket;
   late ExchangeSymbol symbol;
   late Adapter? adapter;
+  int status = 0; // 0 normal -1 closing
 }
 
 mixin SocketProtocal {
@@ -61,6 +63,7 @@ mixin SocketProtocal {
 
 class SocketManager {
   Map<ExchangeSymbol, _SocketInfo?> socketMap = {};
+  Map<ExchangeSymbol, _SocketInfo?> willCloseSocketMap = {};
   Map<SocketProtocal, Map<SubscriptionType, SubscriptionParm?>?> delegateMap =
       {};
   Map<SubscriptionType, Map<ExchangeSymbol, Map<String, int>?>?>
@@ -95,6 +98,9 @@ class SocketManager {
   static unsubscription(SocketProtocal widget,
       [List<SubscriptionParm>? parms]) {
     SocketManager m = SocketManager.instance();
+    if (m.socketMap.length == 0) {
+      return;
+    }
     List<SubscriptionParm> parmsTemp = parms ?? [];
     if (parms == null) {
       m.delegateMap[widget]?.forEach((key, value) {
@@ -145,14 +151,69 @@ class SocketManager {
         if (needUnsub.length > 0) {
           needUnsub.forEach((element) {
             element.exchangeSymbol.forEach((symbol) {
-              Adapter? a = m.socketMap[symbol]!.adapter;
-              unsubparm.pairs = needUnsub;
-              m._sendMessage(symbol, a!.unsubscription(unsubparm));
+              Adapter? a = m.socketMap[symbol]?.adapter;
+              if (a != null) {
+                List<Pair> temp = [];
+                needUnsub.forEach((p) {
+                  if (p.exchangeSymbol.indexOf(symbol) >= 0) {
+                    temp.add(p);
+                  }
+                });
+                unsubparm.pairs = temp;
+                m._sendMessage(symbol, a.unsubscription(unsubparm));
+              }
             });
           });
         }
       });
+
+      Map<ExchangeSymbol, bool> isNeedClose = {};
+      m.socketMap.forEach((key, value) {
+        isNeedClose[key] = true;
+      });
+      m.subTypeKeysNum.forEach((key, value) {
+        if (value != null) {
+          value.forEach((key2, value2) {
+            if (value2 != null) {
+              value2.forEach((key3, value3) {
+                if (value3 != null && value3 > 0) {
+                  isNeedClose[key2] = false;
+                }
+              });
+            }
+          });
+        }
+      });
+      List<ExchangeSymbol> symbols = [];
+      isNeedClose.forEach((symbol, isNeedClose) {
+        if (isNeedClose) {
+          symbols.add(symbol);
+        }
+      });
+      if (symbols.length > 0) {
+        m._closeSocket(symbols);
+      }
     }
+  }
+
+  Function _debounceClose = GNTools().debounce((symbols) {
+    SocketManager m = SocketManager.instance();
+    symbols as List<ExchangeSymbol>;
+    symbols.forEach((symbol) {
+      _SocketInfo? si = m.socketMap[symbol];
+      if (si != null) {
+        si.socket.close();
+        si.status = -1;
+        m.willCloseSocketMap[symbol] = si;
+        m.socketMap.remove(symbol);
+        print("$symbol close");
+      }
+    });
+  }, 5000);
+
+  _closeSocket(List<ExchangeSymbol> symbols) {
+    print("5s $symbols need close");
+    this._debounceClose([symbols]);
   }
 
   // _updateSubTypeKeyMap(SocketProtocal widget) {
@@ -297,6 +358,13 @@ class SocketManager {
   }
 
   _onDone(_SocketInfo socketInfo) {
+    print("onDone ${socketInfo.symbol} ${socketInfo.status}");
+    if (socketInfo.status == -1) {
+      this.willCloseSocketMap.remove(socketInfo.symbol);
+    } else {
+      this.socketMap.remove(socketInfo.symbol);
+    }
+
     if (this.delegateMap.keys.length > 0) {
       this.delegateMap.forEach((key, value) {
         key.onDone(socketInfo.symbol);
@@ -362,13 +430,13 @@ class SocketManager {
     s!.socket.send(message);
   }
 
-  _closeSocket(ExchangeSymbol symbol) {
-    _SocketInfo? s = socketMap[symbol];
-    if (s != null) {
-      s.socket.close();
-      socketMap[symbol] = null;
-    }
-  }
+  // _closeSocket(ExchangeSymbol symbol) {
+  //   _SocketInfo? s = socketMap[symbol];
+  //   if (s != null) {
+  //     s.socket.close();
+  //     socketMap[symbol] = null;
+  //   }
+  // }
 
   // _startSocket(SubscriptionParm parm, void Function() ondone) {
   //   ExchangeSymbol symbol = parm.symbol;
@@ -475,6 +543,10 @@ class _Socket {
   StreamSubscription? stream;
   _Socket(String url) {
     this.channel = IOWebSocketChannel.connect(url);
+  }
+
+  dispose() {
+    print("_socket dispose ${this.channel}");
   }
 
   start(void Function(dynamic) onData, void Function(dynamic)? onError,
